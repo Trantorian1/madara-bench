@@ -1,20 +1,22 @@
-#  __  __           _                   _____
-# |  \/  |         | |                 |_   _|
-# | \  / | __ _  __| | __ _ _ __ __ _    | |  _ __ ___   __ _  __ _  ___
-# | |\/| |/ _` |/ _` |/ _` | '__/ _` |   | | | '_ ` _ \ / _` |/ _` |/ _ \
-# | |  | | (_| | (_| | (_| | | | (_| |  _| |_| | | | | | (_| | (_| |  __/
-# |_|  |_|\__,_|\__,_|\__,_|_|  \__,_| |_____|_| |_| |_|\__,_|\__, |\___|
-#                    ____        _ _     _                     __/ |
-#                   |  _ \      (_) |   | |                   |___/
-#                   | |_) |_   _ _| | __| | ___ _ __
-#                   |  _ <| | | | | |/ _` |/ _ \ '__|
-#                   | |_) | |_| | | | (_| |  __/ |
-#                   |____/ \__,_|_|_|\__,_|\___|_|
+#    __  __           _                   _____
+#   |  \/  |         | |                 |_   _|
+#   | \  / | __ _  __| | __ _ _ __ __ _    | |  _ __ ___   __ _  __ _  ___
+#   | |\/| |/ _` |/ _` |/ _` | '__/ _` |   | | | '_ ` _ \ / _` |/ _` |/ _ \
+#   | |  | | (_| | (_| | (_| | | | (_| |  _| |_| | | | | | (_| | (_| |  __/
+#   |_|  |_|\__,_|\__,_|\__,_|_|  \__,_| |_____|_| |_| |_|\__,_|\__, |\___|
+#                      ____        _ _     _                     __/ |
+#                     |  _ \      (_) |   | |                   |___/
+#                     | |_) |_   _ _| | __| | ___ _ __
+#                     |  _ <| | | | | |/ _` |/ _ \ '__|
+#                     | |_) | |_| | | | (_| |  __/ |
+#                     |____/ \__,_|_|_|\__,_|\___|_|
 #
 # ---
 # Builder which generates the Madara Node docker image for use in benchmarking. 
-# Run with `nix-build`. Generated image will be `./result` and can be imported 
-# using `docker load -i result`
+# Run with `nix-build`. This will generate an installation script as
+# `./result/bin/copyto` which can then be executed to bring the generate docker 
+# image `.tar.gz` into the current directory. This can then be loaded into
+# docker using `docker load -i image.tar.gz`.
 # ---
 
 with import <nixpkgs>
@@ -104,19 +106,18 @@ let
     };
   };
 
-# Calling `nix-build` on this file will create an artefact in `/nix/store/`.
+# Calling `nix-build` on this file will create an artifact in `/nix/store/`.
 # Crucially, nix uses the default unix time as date of last modification. This
 # poses an issue since it means Make will always flag this output as
 # out-of-date.
 #
-# To avoid this issue, we create a script which copies over the generated docker
-# image to a specified directory, updating its date to current time. We cannot
-# do this otherwise as only root has ownership of artefacts generated in
-# `/nix/store/`.
+# To avoid this, we create a script which copies the generated docker image to 
+# a given directory, updating its date to the current time. We cannot do this 
+# otherwise as only root has ownership of artifacts generated in `/nix/store/`.
 #
-# This way, we are able to guarantee that docker images will not be rebuilt on
-# each run, along with any other command associated to their generation such as
-# `docker load -i`.
+# This way, we are able to guarantee that docker images will not be rebuilt by 
+# Make on each run, along with any other command associated to their generation 
+# such as `docker load -i`.
 in writeScriptBin "copyto" ''
   #!${pkgs.stdenv.shell}
   cp ${image} $1
