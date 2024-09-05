@@ -86,22 +86,39 @@ let
     '';
   };
 
-# Generates docker image using nix. This is equivalent to using `FROM scratch`.
-# https://ryantm.github.io/nixpkgs/builders/images/dockertools/
-in dockerTools.buildImage {
-  name = "madara";
-  tag = "0.7.0";
+  # Generates docker image using nix. This is equivalent to using `FROM scratch`.
+  # https://ryantm.github.io/nixpkgs/builders/images/dockertools/
+  image = dockerTools.buildImage {
+    name = "madara";
+    tag = "latest";
 
-  copyToRoot = buildEnv {
-    name = "madara-env";
-    paths = [ madara ];
+    created = "now";
+
+    copyToRoot = buildEnv {
+      name = "madara";
+      paths = [ madara ];
+    };
+
+    config = {
+      Cmd = [ "ls" "/" ]; # Leave this for configuration
+    };
   };
 
-  # Time of creation will be tied to the latest commit, making the image
-  # entirely reproducible
-  created = builtins.substring 0 8 self.lastModifiedDate;
-
-  config = {
-    Cmd = [ "echo" "todo" ]; # Leave this for configuration
-  };
-}
+# Calling `nix-build` on this file will create an artefact in `/nix/store/`.
+# Crucially, nix uses the default unix time as date of last modification. This
+# poses an issue since it means Make will always flag this output as
+# out-of-date.
+#
+# To avoid this issue, we create a script which copies over the generated docker
+# image to a specified directory, updating its date to current time. We cannot
+# do this otherwise as only root has ownership of artefacts generated in
+# `/nix/store/`.
+#
+# This way, we are able to guarantee that docker images will not be rebuilt on
+# each run, along with any other command associated to their generation such as
+# `docker load -i`.
+in writeScriptBin "copyto" ''
+  #!${pkgs.stdenv.shell}
+  cp ${image} $1
+  touch -m $1
+''
