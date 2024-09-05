@@ -1,0 +1,7 @@
+name: madara-runner
+
+services:
+  madara:
+    image: madara:latest
+    cpu_count: 4
+    mem_limit: "16gb"
