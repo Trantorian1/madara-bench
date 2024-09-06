@@ -95,6 +95,29 @@ let
   #   sha256 = "sha256-iCIQnlHMPmkjw4iDdwU5Da4udYjYl0tmUqj16za0xhU=";
   # };
 
+  # Creates a derivation of busybox with only `cat` accessible. This avoids
+  # bloating our docker image with unnecessary dependencies. We use busybox to
+  # shave of even more space with a tiny implementation of `cat`.
+  cat = stdenv.mkDerivation {
+    name = "minimal-cat";
+    buildInputs = [ busybox ];
+    buildCommand = ''
+      mkdir -p $out/bin
+      cp ${busybox}/bin/cat $out/bin/
+    '';
+  };
+
+  runner = writeScriptBin "madara-runner" ''
+    #!${pkgs.stdenv.shell}
+    export RPC_API_KEY=$(cat $RPC_API_FILE)
+
+    /bin/madara                  \
+      --name madara              \
+      --base-path /data/madara   \
+      --network main             \
+      --l1-endpoint $RPC_API_KEY
+  '';
+
   # Generates docker image using nix. This is equivalent to using `FROM scratch`.
   # https://ryantm.github.io/nixpkgs/builders/images/dockertools/
   image = dockerTools.buildImage {
@@ -107,12 +130,20 @@ let
 
     copyToRoot = buildEnv {
       name = "madara";
-      paths = [ madara ];
+      paths = [
+        madara
+        runner
+        cat
+        # This is necessary to avoid 'unable to get local issuer certificate'
+        # https://discourse.nixos.org/t/adding-a-new-ca-certificate-to-included-bundle/14301/8
+        cacert
+      ];
       pathsToLink = [ "/bin" ];
     };
 
     config = {
-      Cmd = [ "/bin/madara" "--help" ]; # Leave this for configuration
+      Cmd = [ "/bin/madara-runner" ];
+      Env = [ "SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt" ];
     };
   };
 
