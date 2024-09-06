@@ -109,13 +109,15 @@ let
 
   runner = writeScriptBin "madara-runner" ''
     #!${pkgs.stdenv.shell}
-    export RPC_API_KEY=$(cat $RPC_API_FILE)
+    export RPC_API_KEY=$(cat $RPC_API_KEY_FILE)
+    export GATEWAY_KEY=$(cat $GATEWAY_KEY_FILE)
 
     /bin/madara                  \
       --name madara              \
       --base-path /data/madara   \
-      --network main             \
-      --l1-endpoint $RPC_API_KEY
+      --network test             \
+      --l1-endpoint $RPC_API_KEY \
+      --gateway-key $GATEWAY_KEY
   '';
 
   # Generates docker image using nix. This is equivalent to using `FROM scratch`.

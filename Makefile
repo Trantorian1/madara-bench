@@ -5,6 +5,7 @@
 NODES    := madara
 IMGS     := $(addsuffix /image.tar.gz,$(NODES))
 VOLUMES  := $(addsuffix _runner_db,$(NODES))
+SECRETS  := secrets/rpc_api.secret secrets/gateway_key.secret
 
 # dim white italic
 TERTIARY := \033[2;3;37m
@@ -28,7 +29,7 @@ help:
 	@echo "TODO(help)"
 
 .PHONY: run
-run: images
+run: images $(SECRETS)
 	@for node in $(NODES); do \
 		echo -e "$(TERTIARY)running$(RESET) $(PASS)$$node$(RESET)"; \
 		docker-compose -f $$node/compose.yaml up -d; \
@@ -46,7 +47,7 @@ stop:
 .PHONY: logs-madara
 logs-madara:
 	@echo -e "$(TERTIARY)logs for $(INFO)madara$(RESET)";
-	@docker-compose -f madara/compose.yaml logs;
+	@docker-compose -f madara/compose.yaml logs -f;
 
 .PHONY: images
 images: $(IMGS)

@@ -8,9 +8,11 @@ services:
     ports:
       - "9944"
     environment:
-      RPC_API_FILE: /run/secrets/rpc_api_key
+      RPC_API_KEY_FILE: /run/secrets/rpc_api_key
+      GATEWAY_KEY_FILE: /run/secrets/gateway_key
     secrets:
       - rpc_api_key
+      - gateway_key
     volumes:
       - type: volume
         source: db
@@ -21,6 +23,8 @@ services:
 secrets:
   rpc_api_key:
     file: ../secrets/rpc_api.secret
+  gateway_key:
+    file: ../secrets/gateway_key.secret
 
 volumes:
   db:
