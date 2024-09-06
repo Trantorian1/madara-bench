@@ -1,4 +1,4 @@
-name: madara-runner
+name: madara_runner
 
 services:
   madara:
