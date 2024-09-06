@@ -88,21 +88,31 @@ let
     '';
   };
 
+  # # Additional images can be downloaded with `docerTools.pullImage`
+  # debian = dockerTools.pullImage {
+  #   imageName = "debian";
+  #   imageDigest = "sha256:b8084b1a576c5504a031936e1132574f4ce1d6cc7130bbcc25a28f074539ae6b";
+  #   sha256 = "sha256-iCIQnlHMPmkjw4iDdwU5Da4udYjYl0tmUqj16za0xhU=";
+  # };
+
   # Generates docker image using nix. This is equivalent to using `FROM scratch`.
   # https://ryantm.github.io/nixpkgs/builders/images/dockertools/
   image = dockerTools.buildImage {
     name = "madara";
     tag = "latest";
 
-    created = "now";
+    # # Use `fromImage` to specify a base image. This image must already be 
+    # # available locally, such as after using `dockerTools.pullImage`
+    # fromImage = debian;
 
     copyToRoot = buildEnv {
       name = "madara";
       paths = [ madara ];
+      pathsToLink = [ "/bin" ];
     };
 
     config = {
-      Cmd = [ "ls" "/" ]; # Leave this for configuration
+      Cmd = [ "/bin/madara" "--help" ]; # Leave this for configuration
     };
   };
 
