@@ -5,9 +5,11 @@
 NODES := madara
 IMGS := $(addsuffix /image.tar.gz,$(NODES))
 
-RESET    := \033[0m
-ACCENT   := \033[1;36m   # bold cyan
-TERTIARY := \033[2;3;37m # dim white italic
+RESET    :=\033[0m
+TERTIARY :=\033[2;3;37m # dim white italic
+PASS     :=\033[1;36m   # bold cyan
+PASS     :=\033[1;32m   # bold green
+WARN     :=\033[1;31m   # bold red
 
 .PHONY: all
 all: help
@@ -19,19 +21,34 @@ help:
 .PHONY: run
 run: images
 	@for node in $(NODES); do \
-		docker-compose -f $$node/compose.yaml up; \
+		echo -e "$(TERTIARY)running$(RESET) $(PASS)$$node$(RESET)"; \
+		docker-compose -f $$node/compose.yaml up -d; \
+	done
+	@echo -e "$(PASS)all services set up$(RESET)"
+
+.PHONY: stop
+stop: images
+	@for node in $(NODES); do \
+		echo -e "$(TERTIARY)stopping $(WARN)$$node$(RESET)"; \
+		docker-compose -f $$node/compose.yaml stop; \
+	done
+	@echo -e "$(WARN)all services stopped$(RESET)"
+
+.PHONY: logs
+logs: images
+	@for node in $(NODES); do \
+		echo -e "$(TERTIARY)logs for $(INFO)$$node$(RESET)"; \
+		docker-compose -f $$node/compose.yaml logs; \
 	done
 
 .PHONY: images
 images: $(IMGS)
 
 .PHONY: clean
-clean:
-	@echo -e "$(TERTIARY)stopping all containers$(RESET)"
-	@for node in $(NODES); do \
-		docker-compose -f $$node/compose.yaml stop; \
-	done
-	@echo -e "$(TERTIARY)removing all images$(RESET)"
+clean: stop
+	@echo -e "$(TERTIARY)pruning containers$(RESET)"
+	@docker container prune -f
+	@echo -e "$(TERTIARY)removing local images tar.gz$(RESET)"
 	@rm -rf $(IMGS)
 	@echo -e "$(TERTIARY)pruning images$(RESET)"
 	@docker image prune -f
@@ -47,7 +64,7 @@ debug:
 
 %image.tar.gz: node = $(@D)
 %image.tar.gz: %default.nix
-	@echo -e "$(TERTIARY)building$(RESET) $(ACCENT)$(node)$(RESET)" ;
+	@echo -e "$(TERTIARY)building$(RESET) $(PASS)$(node)$(RESET)" ;
 	@nix-build $(node) -o $(node)/result
 	@$(node)/result/bin/copyto $(node)/image.tar.gz
 	@docker load -i $(node)/image.tar.gz
