@@ -5,3 +5,22 @@ services:
     image: madara:latest
     cpu_count: 4
     mem_limit: "16gb"
+    ports:
+      - "9944"
+    environment:
+      RPC_API_FILE: /run/secrets/rpc_api_key
+    secrets:
+      - rpc_api_key
+    volumes:
+      - type: volume
+        source: db
+        target: /data
+        volume:
+          nocopy: true
+
+secrets:
+  rpc_api_key:
+    file: ../secrets/rpc_api.secret
+
+volumes:
+  db:
