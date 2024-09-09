@@ -72,11 +72,11 @@ fclean: clean
 
 .PHONY: re
 re: clean
-	@make --silent run
+	@make --silent start
 
 .PHONY: fre
 fre: fclean
-	@make --silent run
+	@make --silent start
 
 .PHONY: debug
 debug:

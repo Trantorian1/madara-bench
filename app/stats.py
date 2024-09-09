@@ -4,30 +4,46 @@ import docker
 import fastapi
 from docker import errors as docker_errors
 from docker.models.containers import Container
+from pydantic import BaseModel
 
 
 class NodeName(str, Enum):
     madara = "madara"
 
+class ErrorMessage(BaseModel):
+    message: str
 
-def container_get(node: NodeName) -> Container:
+
+def container_get(node: NodeName) -> Container | fastapi.responses.JSONResponse:
     try:
         client = docker.client.from_env()
         return client.containers.get(node + "_runner")
     except docker_errors.NotFound:
-        raise fastapi.HTTPException(
+        return fastapi.responses.JSONResponse(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"{node.capitalize()} node not found, it might not be running or have a different name",
+            content = {
+                "message": f"{node.capitalize()} node not found, it might not be running or have a different name"
+            }
         )
     except docker_errors.APIError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_409_CONFLICT,
-            detail=f"Failed to query {node.capitalize()} node docker, something is seriously wrong",
+        return fastapi.responses.JSONResponse(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            content = {
+                "message": f"Failed to query {node.name.capitalize()} node docker, something is seriously wrong"
+            }
         )
 
 
 # As explained in https://github.com/moby/moby/issues/26711
-def stats_cpu_normalized(container: Container) -> float:
+def stats_cpu_normalized(node: NodeName, container: Container) -> float | fastapi.responses.JSONResponse:
+    if container.status != "running":
+        return fastapi.responses.JSONResponse(
+            status_code=fastapi.status.HTTP_410_GONE,
+            content = {
+                "message": f"{node.name.capitalize()} node container is no longer running"
+            }
+        )
+
     stats = container.stats(stream=False)
 
     cpu_delta: int = (
@@ -45,7 +61,15 @@ def stats_cpu_normalized(container: Container) -> float:
     else:
         return 0.0
 
-def stats_cpu_system(container: Container) -> float:
+def stats_cpu_system(node: NodeName, container: Container) -> float | fastapi.responses.JSONResponse:
+    if container.status != "running":
+        return fastapi.responses.JSONResponse(
+            status_code=fastapi.status.HTTP_410_GONE,
+            content = {
+                "message": f"{node.name.capitalize()} node container is no longer running"
+            }
+        )
+
     stats = container.stats(stream=False)
 
     cpu_delta: int = (

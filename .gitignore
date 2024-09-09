@@ -6,3 +6,7 @@ image.tar.gz
 
 # secrets
 secrets/**
+
+# python
+__pycache__
+debug.log
