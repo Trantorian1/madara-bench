@@ -3,6 +3,7 @@ name: madara_runner
 services:
   madara:
     image: madara:latest
+    container_name: "madara_runner"
     cpu_count: 4
     mem_limit: "16gb"
     ports:

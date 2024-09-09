@@ -28,8 +28,8 @@ all: help
 help:
 	@echo "TODO(help)"
 
-.PHONY: run
-run: images $(SECRETS)
+.PHONY: start
+start: images $(SECRETS)
 	@for node in $(NODES); do \
 		echo -e "$(TERTIARY)running$(RESET) $(PASS)$$node$(RESET)"; \
 		docker-compose -f $$node/compose.yaml up -d; \
