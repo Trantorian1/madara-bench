@@ -13,6 +13,7 @@ STARKNET_SPECVERSION: str = "starknet_specVersion"
 STARKNET_GETBLOCKWITHTXHASHES: str = "starknet_getBlockWithTxHashes"
 STARKNET_GETBLOCKWITHTXS: str = "starknet_getBlockWithTxs"
 STARKNET_GETBLOCKWITHRECEIPTS: str = "starknet_getBlockWithReceipts"
+STARKNET_GETSTATEUPDATE: str = "starknet_getStateUpdate"
 
 
 def json_rpc(
@@ -54,3 +55,9 @@ def rpc_starknet_getBlockWithReceipts(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
     return json_rpc(url, STARKNET_GETBLOCKWITHRECEIPTS, {"block_id": block_id})
+
+
+def rpc_starknet_getStateUpdate(
+    url: str, block_id: str | dict[str, str] | dict[str, int]
+) -> dict[str, Any]:
+    return json_rpc(url, STARKNET_GETSTATEUPDATE, {"block_id": block_id})
