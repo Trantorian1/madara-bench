@@ -325,3 +325,23 @@ async def starknet_getClassHashAt(
             return rpc.rpc_starknet_getClassHashAt(url, contract_address, block_id)
     else:
         return container
+
+
+@app.get("/info/rpc/starknet_getClassAt/{node}/", responses={**ERROR_CODES})
+async def starknet_getClassAt(
+    node: models.NodeName,
+    contract_address: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_tag: models.BlockTag | None = None,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_getClassAt(url, contract_address, block_id)
+    else:
+        return container

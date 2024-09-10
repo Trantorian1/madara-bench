@@ -24,6 +24,7 @@ STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX: str = (
 STARKNET_GET_TRANSACTION_RECEIPT: str = "starknet_getTransactionReceipt"
 STARKNET_GET_CLASS: str = "starknet_getClass"
 STARKNET_GET_CLASS_HASH_AT: str = "starknet_getClassHashAt"
+STARKNET_GET_CLASS_AT: str = "starknet_getClassAt"
 
 
 def json_rpc(
@@ -149,5 +150,15 @@ def rpc_starknet_getClassHashAt(
     return json_rpc(
         url,
         STARKNET_GET_CLASS_HASH_AT,
+        {"block_id": block_id, "contract_address": contract_address},
+    )
+
+
+def rpc_starknet_getClassAt(
+    url: str, contract_address: str, block_id: str | dict[str, str] | dict[str, int]
+):
+    return json_rpc(
+        url,
+        STARKNET_GET_CLASS_AT,
         {"block_id": block_id, "contract_address": contract_address},
     )
