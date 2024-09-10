@@ -12,6 +12,7 @@ DOCKER_HOST_PORT: str = "HostPort"
 STARKNET_SPECVERSION: str = "starknet_specVersion"
 STARKNET_GETBLOCKWITHTXHASHES: str = "starknet_getBlockWithTxHashes"
 STARKNET_GETBLOCKWITHTXS: str = "starknet_getBlockWithTxs"
+STARKNET_GETBLOCKWITHRECEIPTS: str = "starknet_getBlockWithReceipts"
 
 
 def json_rpc(
@@ -47,3 +48,9 @@ def rpc_starknet_getBlockWithTxs(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
     return json_rpc(url, STARKNET_GETBLOCKWITHTXS, {"block_id": block_id})
+
+
+def rpc_starknet_getBlockWithReceipts(
+    url: str, block_id: str | dict[str, str] | dict[str, int]
+) -> dict[str, Any]:
+    return json_rpc(url, STARKNET_GETBLOCKWITHRECEIPTS, {"block_id": block_id})
