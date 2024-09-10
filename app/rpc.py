@@ -5,6 +5,7 @@ import requests
 from docker.models.containers import Container
 
 from app import models
+from app.error import ErrorBlockIdMissing
 
 MADARA_RPC_PORT: str = "9944/tcp"
 DOCKER_HOST_PORT: str = "HostPort"
@@ -36,7 +37,7 @@ def json_rpc(
 
 def to_block_id(
     block_hash: str | None, block_number: int | None, block_tag: models.BlockTag | None
-) -> str | dict[str, str] | dict[str, int]:
+) -> str | dict[str, str] | dict[str, int] | ErrorBlockIdMissing:
     if isinstance(block_hash, str):
         return {"block_hash": block_hash}
     elif isinstance(block_number, int):
@@ -44,7 +45,7 @@ def to_block_id(
     elif isinstance(block_tag, models.BlockTag):
         return block_tag.name
     else:
-        return ""
+        return ErrorBlockIdMissing()
 
 
 def rpc_url(node: models.NodeName, container: Container):

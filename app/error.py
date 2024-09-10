@@ -36,3 +36,13 @@ class ErrorNodeNotRunning(fastapi.responses.JSONResponse):
                 "message": f"{node.name.capitalize()} node container is no longer running"
             },
         )
+
+
+class ErrorBlockIdMissing(fastapi.responses.JSONResponse):
+    def __init__(self) -> None:
+        super().__init__(
+            status_code=fastapi.status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": "invalid block id, method requires either a valid block hash, block number or block tag"
+            },
+        )

@@ -13,15 +13,19 @@ MADARA_DB: str = "madara_runner_db"
 REGEX_HEX: str = "^0x[a-fA-F0-9]+$"
 
 ERROR_CODES: dict[int, dict[str, Any]] = {
-    404: {
+    fastapi.status.HTTP_400_BAD_REQUEST: {
+        "description": "Invalid block id",
+        "model": error.ErrorMessage,
+    },
+    fastapi.status.HTTP_404_NOT_FOUND: {
         "description": "The node could not be found",
         "model": error.ErrorMessage,
     },
-    409: {
+    fastapi.status.HTTP_409_CONFLICT: {
         "description": "Node exists but did not respond",
         "model": error.ErrorMessage,
     },
-    410: {
+    fastapi.status.HTTP_410_GONE: {
         "description": "Node exists but is not running",
         "model": error.ErrorMessage,
     },
@@ -130,9 +134,11 @@ async def starknet_getBlockWithTxHashes(
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getBlockWithTxHashes(
-            url, rpc.to_block_id(block_hash, block_number, block_tag)
-        )
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_getBlockWithTxHashes(url, block_id)
     else:
         return container
 
@@ -147,9 +153,11 @@ async def starknet_getBlockWithTxs(
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getBlockWithTxs(
-            url, rpc.to_block_id(block_hash, block_number, block_tag)
-        )
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_getBlockWithTxs(url, block_id)
     else:
         return container
 
@@ -164,9 +172,11 @@ async def starknet_getBlockWithReceipts(
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getBlockWithReceipts(
-            url, rpc.to_block_id(block_hash, block_number, block_tag)
-        )
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_getBlockWithReceipts(url, block_id)
     else:
         return container
 
@@ -181,9 +191,11 @@ async def starknet_getStateUpdate(
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getStateUpdate(
-            url, rpc.to_block_id(block_hash, block_number, block_tag)
-        )
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_getStateUpdate(url, block_id)
     else:
         return container
 
@@ -200,12 +212,13 @@ async def starknet_getStorageAt(
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getStorageAt(
-            url,
-            contract_address,
-            contract_key,
-            rpc.to_block_id(block_hash, block_number, block_tag),
-        )
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_getStorageAt(
+                url, contract_address, contract_key, block_id
+            )
     else:
         return container
 
@@ -250,9 +263,13 @@ async def starknet_getTransactionByBlockIdAndIndex(
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
-            url, transaction_index, rpc.to_block_id(block_hash, block_number, block_tag)
-        )
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
+                url, transaction_index, block_id
+            )
     else:
         return container
 
@@ -266,5 +283,25 @@ async def starknet_getTransactionReceipt(
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
         return rpc.rpc_starknet_getTransactionReceipt(url, transaction_hash)
+    else:
+        return container
+
+
+@app.get("/info/rpc/starknet_getClass/{node}/", responses={**ERROR_CODES})
+async def starknet_getClass(
+    node: models.NodeName,
+    class_hash: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_tag: models.BlockTag | None = None,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starnet_getClass(url, class_hash, block_id)
     else:
         return container
