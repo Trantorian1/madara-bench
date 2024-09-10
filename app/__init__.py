@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 app = fastapi.FastAPI()
 
 
+REGEX_BLOCK_HASH: str = "^0x[a-fA-F0-9]+$"
+REGEX_CONTRACT_ADDRESS: str = "^0x[a-fA-F0-9]+$"
+REGEX_CONTRACT_KEY: str = "^0x[a-fA-F0-9]+$"
+
+
 @app.get(
     "/bench/cpu/{node}",
     responses={
@@ -170,7 +175,7 @@ async def starknet_specVersion(node: models.NodeName):
 @app.get("/info/rpc/starknet_getBlockWithTxHashes/{node}/")
 async def starknet_getBlockWithTxHashes(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern="^0x[a-fA-F0-9]+$")] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -197,7 +202,7 @@ async def starknet_getBlockWithTxHashes(
 @app.get("/info/rpc/starknet_getBlockWithTxs/{node}/")
 async def starknet_getBlockWithTxs(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern="^0x[a-fA-F0-9]+$")] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -220,7 +225,7 @@ async def starknet_getBlockWithTxs(
 @app.get("/info/rpc/starknet_getBlockWithReceipts/{node}/")
 async def starknet_getBlockWithReceipts(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern="^0x[a-fA-F0-9]+$")] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -247,7 +252,7 @@ async def starknet_getBlockWithReceipts(
 @app.get("/info/rpc/starknet_getStateUpdate/{node}/")
 async def starknet_getStateUpdate(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern="^0x[a-fA-F0-9]+$")] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -261,6 +266,37 @@ async def starknet_getStateUpdate(
         elif isinstance(block_tag, models.BlockTag):
             return rpc.rpc_starknet_getStateUpdate(
                 url,
+                block_tag.name,
+            )
+    else:
+        return container
+
+
+@app.get("/info/rpc/starknet_getStorageAt/{node}/")
+async def starknet_getStorageAt(
+    node: models.NodeName,
+    contract_address: Annotated[str, fastapi.Query(pattern=REGEX_CONTRACT_ADDRESS)],
+    contract_key: Annotated[str, fastapi.Query(pattern=REGEX_CONTRACT_KEY)],
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
+    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_tag: models.BlockTag | None = None,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        if isinstance(block_hash, str):
+            return rpc.rpc_starknet_getStorageAt(
+                url, contract_address, contract_key, {"block_hash": block_hash}
+            )
+        elif isinstance(block_numer, int):
+            return rpc.rpc_starknet_getStorageAt(
+                url, contract_address, contract_key, {"block_number": block_numer}
+            )
+        elif isinstance(block_tag, models.BlockTag):
+            return rpc.rpc_starknet_getStorageAt(
+                url,
+                contract_address,
+                contract_key,
                 block_tag.name,
             )
     else:
