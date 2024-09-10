@@ -275,3 +275,33 @@ async def starknet_getTransactionByHash(
         return rpc.rpc_starknet_getTransactionByHash(url, transaction_hash)
     else:
         return container
+
+
+@app.get(
+    "/info/rpc/starknet_getTransactionByBlockIdAndIndex/{node}/",
+    responses={**ERROR_CODES},
+)
+async def starknet_getTransactionByBlockIdAndIndex(
+    node: models.NodeName,
+    transaction_index: Annotated[int, fastapi.Query(ge=0)],
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
+    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_tag: models.BlockTag | None = None,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        if isinstance(block_hash, str):
+            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
+                url, transaction_index, {"block_hash": block_hash}
+            )
+        elif isinstance(block_numer, int):
+            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
+                url, transaction_index, {"block_number": block_numer}
+            )
+        elif isinstance(block_tag, models.BlockTag):
+            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
+                url, transaction_index, block_tag.name
+            )
+    else:
+        return container

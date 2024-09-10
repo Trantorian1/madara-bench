@@ -17,6 +17,9 @@ STARKNET_GET_STATE_UPDATE: str = "starknet_getStateUpdate"
 STARKNET_GET_STORAGE_AT: str = "starknet_getStorageAt"
 STARKNET_GET_TRANSACTION_STATUS: str = "starknet_getTransactionStatus"
 STARKNET_GET_TRANSACTION_BY_HASH: str = "starknet_getTransactionByHash"
+STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX: str = (
+    "starknet_getTransactionByBlockIdAndIndex"
+)
 
 
 def json_rpc(
@@ -96,4 +99,14 @@ def rpc_starknet_getTransactionByHash(
 ) -> dict[str, Any]:
     return json_rpc(
         url, STARKNET_GET_TRANSACTION_BY_HASH, {"transaction_hash": transaction_hash}
+    )
+
+
+def rpc_starknet_getTransactionByBlockIdAndIndex(
+    url: str, transaction_index: int, block_id: str | dict[str, str] | dict[str, int]
+):
+    return json_rpc(
+        url,
+        STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX,
+        {"block_id": block_id, "index": transaction_index},
     )
