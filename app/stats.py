@@ -6,6 +6,8 @@ from docker import errors as docker_errors
 from docker.models.containers import Container
 from pydantic import BaseModel
 
+from .error import ErrorNodeNotFound, ErrorNodeNotRunning, ErrorNodeSilent
+
 
 class NodeName(str, Enum):
     madara = "madara"
@@ -18,31 +20,17 @@ def container_get(node: NodeName) -> Container | fastapi.responses.JSONResponse:
     try:
         client = docker.client.from_env()
         return client.containers.get(node + "_runner")
+
     except docker_errors.NotFound:
-        return fastapi.responses.JSONResponse(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            content = {
-                "message": f"{node.capitalize()} node not found, it might not be running or have a different name"
-            }
-        )
+        return ErrorNodeNotFound(node)
     except docker_errors.APIError:
-        return fastapi.responses.JSONResponse(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            content = {
-                "message": f"Failed to query {node.name.capitalize()} node docker, something is seriously wrong"
-            }
-        )
+        return ErrorNodeSilent(node)
 
 
 # As explained in https://github.com/moby/moby/issues/26711
 def stats_cpu_normalized(node: NodeName, container: Container) -> float | fastapi.responses.JSONResponse:
     if container.status != "running":
-        return fastapi.responses.JSONResponse(
-            status_code=fastapi.status.HTTP_410_GONE,
-            content = {
-                "message": f"{node.name.capitalize()} node container is no longer running"
-            }
-        )
+        return ErrorNodeNotRunning(node)
 
     stats = container.stats(stream=False)
 
@@ -63,12 +51,7 @@ def stats_cpu_normalized(node: NodeName, container: Container) -> float | fastap
 
 def stats_cpu_system(node: NodeName, container: Container) -> float | fastapi.responses.JSONResponse:
     if container.status != "running":
-        return fastapi.responses.JSONResponse(
-            status_code=fastapi.status.HTTP_410_GONE,
-            content = {
-                "message": f"{node.name.capitalize()} node container is no longer running"
-            }
-        )
+        return ErrorNodeNotRunning(node)
 
     stats = container.stats(stream=False)
 
@@ -87,6 +70,22 @@ def stats_cpu_system(node: NodeName, container: Container) -> float | fastapi.re
         return 0.0
 
 
-def stats_memory(container: Container) -> int:
+def stats_memory(node: NodeName, container: Container) -> int | fastapi.responses.JSONResponse:
+    if container.status != "running":
+        return ErrorNodeNotRunning(node)
+
     stats = container.stats(stream=False)
     return stats["memory_stats"]["usage"]
+
+def stats_storage(node: NodeName, container: Container) -> int | fastapi.responses.JSONResponse:
+    if container.status != "running":
+        return ErrorNodeNotRunning(node)
+
+    try:
+        result = container.exec_run(["du", "-sb", "/data"])
+        stdin: str = result.output.decode('utf8')
+        test = stdin.removesuffix("\t/data\n")
+        return int(test)
+
+    except docker_errors.APIError:
+        return ErrorNodeSilent(node)

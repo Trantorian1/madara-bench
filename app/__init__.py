@@ -142,33 +142,60 @@ async def node_get_cpu_system(node: stats.NodeName):
 async def node_get_memory(node: stats.NodeName):
     """Get node memory usage.
 
-    Args:
-        node: the node to inspect.
-
-    Raises:
-        HTTPException: 404 if the node cannot be found,
-        409 if the node exists but does not respond.
-
-    Returns:
-        Amount of ram used by the node, in bytes.
+    Fetches the amount of ram used by the node in bytes.
     """
 
     container = stats.container_get(node)
     if isinstance(container, Container):
-        return stats.stats_memory(container)
+        return stats.stats_memory(node, container)
     else:
         return container
 
 
-@app.get("/bench/storage/{node}")
+@app.get("/bench/storage/{node}", responses={
+    404: { 
+        "description": "The node could not be found",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message": "string"
+                }
+            }
+        }
+    },
+    409: {
+        "description": "Node exists but did not respond",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message": "string"
+                }
+            }
+        }
+    },
+    410: {
+        "description": "Node exists but is not running",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message": "string"
+                }
+            }
+        }
+    },
+})
 async def node_get_storage(node: stats.NodeName):
     """Returns node storage usage
 
-    Args:
-        node: the node to inspect
+    Fetches the amount of space the node database is currently taking up, in
+    bytes
     """
-    client = docker.client.from_env()
-    client.containers.list()
+
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        return stats.stats_storage(node, container)
+    else:
+        return container
 
 
 @app.get("/info/docker/running")
