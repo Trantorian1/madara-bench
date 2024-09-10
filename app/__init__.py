@@ -124,25 +124,15 @@ async def starknet_specVersion(node: models.NodeName):
 async def starknet_getBlockWithTxHashes(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
-    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        if isinstance(block_hash, str):
-            return rpc.rpc_starknet_getBlockWithTxHashes(
-                url, {"block_hash": block_hash}
-            )
-        elif isinstance(block_numer, int):
-            return rpc.rpc_starknet_getBlockWithTxHashes(
-                url, {"block_number": block_numer}
-            )
-        elif isinstance(block_tag, models.BlockTag):
-            return rpc.rpc_starknet_getBlockWithTxHashes(
-                url,
-                block_tag.name,
-            )
+        return rpc.rpc_starknet_getBlockWithTxHashes(
+            url, rpc.to_block_id(block_hash, block_number, block_tag)
+        )
     else:
         return container
 
@@ -151,21 +141,15 @@ async def starknet_getBlockWithTxHashes(
 async def starknet_getBlockWithTxs(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
-    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        if isinstance(block_hash, str):
-            return rpc.rpc_starknet_getBlockWithTxs(url, {"block_hash": block_hash})
-        elif isinstance(block_numer, int):
-            return rpc.rpc_starknet_getBlockWithTxs(url, {"block_number": block_numer})
-        elif isinstance(block_tag, models.BlockTag):
-            return rpc.rpc_starknet_getBlockWithTxs(
-                url,
-                block_tag.name,
-            )
+        return rpc.rpc_starknet_getBlockWithTxs(
+            url, rpc.to_block_id(block_hash, block_number, block_tag)
+        )
     else:
         return container
 
@@ -174,25 +158,15 @@ async def starknet_getBlockWithTxs(
 async def starknet_getBlockWithReceipts(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
-    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        if isinstance(block_hash, str):
-            return rpc.rpc_starknet_getBlockWithReceipts(
-                url, {"block_hash": block_hash}
-            )
-        elif isinstance(block_numer, int):
-            return rpc.rpc_starknet_getBlockWithReceipts(
-                url, {"block_number": block_numer}
-            )
-        elif isinstance(block_tag, models.BlockTag):
-            return rpc.rpc_starknet_getBlockWithReceipts(
-                url,
-                block_tag.name,
-            )
+        return rpc.rpc_starknet_getBlockWithReceipts(
+            url, rpc.to_block_id(block_hash, block_number, block_tag)
+        )
     else:
         return container
 
@@ -201,21 +175,15 @@ async def starknet_getBlockWithReceipts(
 async def starknet_getStateUpdate(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
-    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        if isinstance(block_hash, str):
-            return rpc.rpc_starknet_getStateUpdate(url, {"block_hash": block_hash})
-        elif isinstance(block_numer, int):
-            return rpc.rpc_starknet_getStateUpdate(url, {"block_number": block_numer})
-        elif isinstance(block_tag, models.BlockTag):
-            return rpc.rpc_starknet_getStateUpdate(
-                url,
-                block_tag.name,
-            )
+        return rpc.rpc_starknet_getStateUpdate(
+            url, rpc.to_block_id(block_hash, block_number, block_tag)
+        )
     else:
         return container
 
@@ -226,27 +194,18 @@ async def starknet_getStorageAt(
     contract_address: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
     contract_key: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
-    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        if isinstance(block_hash, str):
-            return rpc.rpc_starknet_getStorageAt(
-                url, contract_address, contract_key, {"block_hash": block_hash}
-            )
-        elif isinstance(block_numer, int):
-            return rpc.rpc_starknet_getStorageAt(
-                url, contract_address, contract_key, {"block_number": block_numer}
-            )
-        elif isinstance(block_tag, models.BlockTag):
-            return rpc.rpc_starknet_getStorageAt(
-                url,
-                contract_address,
-                contract_key,
-                block_tag.name,
-            )
+        return rpc.rpc_starknet_getStorageAt(
+            url,
+            contract_address,
+            contract_key,
+            rpc.to_block_id(block_hash, block_number, block_tag),
+        )
     else:
         return container
 
@@ -285,24 +244,15 @@ async def starknet_getTransactionByBlockIdAndIndex(
     node: models.NodeName,
     transaction_index: Annotated[int, fastapi.Query(ge=0)],
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
-    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        if isinstance(block_hash, str):
-            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
-                url, transaction_index, {"block_hash": block_hash}
-            )
-        elif isinstance(block_numer, int):
-            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
-                url, transaction_index, {"block_number": block_numer}
-            )
-        elif isinstance(block_tag, models.BlockTag):
-            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
-                url, transaction_index, block_tag.name
-            )
+        return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
+            url, transaction_index, rpc.to_block_id(block_hash, block_number, block_tag)
+        )
     else:
         return container
 

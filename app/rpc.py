@@ -21,6 +21,7 @@ STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX: str = (
     "starknet_getTransactionByBlockIdAndIndex"
 )
 STARKNET_GET_TRANSACTION_RECEIPT: str = "starknet_getTransactionReceipt"
+STARKNET_GET_CLASS: str = "starknet_getClass"
 
 
 def json_rpc(
@@ -31,6 +32,19 @@ def json_rpc(
 
     response = requests.post(url=url, json=data, headers=headers)
     return response.json()
+
+
+def to_block_id(
+    block_hash: str | None, block_number: int | None, block_tag: models.BlockTag | None
+) -> str | dict[str, str] | dict[str, int]:
+    if isinstance(block_hash, str):
+        return {"block_hash": block_hash}
+    elif isinstance(block_number, int):
+        return {"block_number": block_number}
+    elif isinstance(block_tag, models.BlockTag):
+        return block_tag.name
+    else:
+        return ""
 
 
 def rpc_url(node: models.NodeName, container: Container):
@@ -116,4 +130,12 @@ def rpc_starknet_getTransactionByBlockIdAndIndex(
 def rpc_starknet_getTransactionReceipt(url: str, transaction_hash: str):
     return json_rpc(
         url, STARKNET_GET_TRANSACTION_RECEIPT, {"transaction_hash": transaction_hash}
+    )
+
+
+def rpc_starnet_getClass(
+    url: str, class_hash: str, block_id: str | dict[str, str] | dict[str, int]
+):
+    return json_rpc(
+        url, STARKNET_GET_CLASS, {"block_id": block_id, "class_hash": class_hash}
     )
