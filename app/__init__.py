@@ -10,13 +10,7 @@ from app import error, models, rpc, stats
 MADARA: str = "madara_runner"
 MADARA_DB: str = "madara_runner_db"
 
-logger = logging.getLogger(__name__)
-app = fastapi.FastAPI()
-
-
-REGEX_BLOCK_HASH: str = "^0x[a-fA-F0-9]+$"
-REGEX_CONTRACT_ADDRESS: str = "^0x[a-fA-F0-9]+$"
-REGEX_CONTRACT_KEY: str = "^0x[a-fA-F0-9]+$"
+REGEX_HEX: str = "^0x[a-fA-F0-9]+$"
 
 ERROR_CODES: dict[int, dict[str, Any]] = {
     404: {
@@ -32,6 +26,10 @@ ERROR_CODES: dict[int, dict[str, Any]] = {
         "model": error.ErrorMessage,
     },
 }
+
+
+logger = logging.getLogger(__name__)
+app = fastapi.FastAPI()
 
 
 @app.get("/bench/cpu/{node}", responses={**ERROR_CODES})
@@ -125,7 +123,7 @@ async def starknet_specVersion(node: models.NodeName):
 @app.get("/info/rpc/starknet_getBlockWithTxHashes/{node}/", responses={**ERROR_CODES})
 async def starknet_getBlockWithTxHashes(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -152,7 +150,7 @@ async def starknet_getBlockWithTxHashes(
 @app.get("/info/rpc/starknet_getBlockWithTxs/{node}/", responses={**ERROR_CODES})
 async def starknet_getBlockWithTxs(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -175,7 +173,7 @@ async def starknet_getBlockWithTxs(
 @app.get("/info/rpc/starknet_getBlockWithReceipts/{node}/", responses={**ERROR_CODES})
 async def starknet_getBlockWithReceipts(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -202,7 +200,7 @@ async def starknet_getBlockWithReceipts(
 @app.get("/info/rpc/starknet_getStateUpdate/{node}/", responses={**ERROR_CODES})
 async def starknet_getStateUpdate(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -225,9 +223,9 @@ async def starknet_getStateUpdate(
 @app.get("/info/rpc/starknet_getStorageAt/{node}/", responses={**ERROR_CODES})
 async def starknet_getStorageAt(
     node: models.NodeName,
-    contract_address: Annotated[str, fastapi.Query(pattern=REGEX_CONTRACT_ADDRESS)],
-    contract_key: Annotated[str, fastapi.Query(pattern=REGEX_CONTRACT_KEY)],
-    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
+    contract_address: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
+    contract_key: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
+    block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_HEX)] = None,
     block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -249,5 +247,18 @@ async def starknet_getStorageAt(
                 contract_key,
                 block_tag.name,
             )
+    else:
+        return container
+
+
+@app.get("/info/rpc/starknet_getTransactionStatus/{node}/", responses={**ERROR_CODES})
+async def starknet_getTransactionStatus(
+    node: models.NodeName,
+    transaction_hash: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_getTransactionStatus(url, transaction_hash)
     else:
         return container

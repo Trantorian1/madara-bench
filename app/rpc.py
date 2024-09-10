@@ -9,12 +9,13 @@ from app import models
 MADARA_RPC_PORT: str = "9944/tcp"
 DOCKER_HOST_PORT: str = "HostPort"
 
-STARKNET_SPECVERSION: str = "starknet_specVersion"
-STARKNET_GETBLOCKWITHTXHASHES: str = "starknet_getBlockWithTxHashes"
-STARKNET_GETBLOCKWITHTXS: str = "starknet_getBlockWithTxs"
-STARKNET_GETBLOCKWITHRECEIPTS: str = "starknet_getBlockWithReceipts"
-STARKNET_GETSTATEUPDATE: str = "starknet_getStateUpdate"
-STARKNET_GETSTORAGEAT: str = "starknet_getStorageAt"
+STARKNET_SPEC_VERSION: str = "starknet_specVersion"
+STARKNET_GET_BLOCK_WITH_TX_HASHES: str = "starknet_getBlockWithTxHashes"
+STARKNET_GET_BLOCK_WITH_TXS: str = "starknet_getBlockWithTxs"
+STARKNET_GET_BLOCK_WITH_RECEIPTS: str = "starknet_getBlockWithReceipts"
+STARKNET_GET_STATE_UPDATE: str = "starknet_getStateUpdate"
+STARKNET_GET_STORAGE_AT: str = "starknet_getStorageAt"
+STARKNET_GET_TRANSACTION_STATUS: str = "starknet_getTransactionStatus"
 
 
 def json_rpc(
@@ -37,31 +38,31 @@ def rpc_url(node: models.NodeName, container: Container):
 
 
 def rpc_starknet_specVersion(url: str) -> dict[str, Any]:
-    return json_rpc(url, STARKNET_SPECVERSION)
+    return json_rpc(url, STARKNET_SPEC_VERSION)
 
 
 def rpc_starknet_getBlockWithTxHashes(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
-    return json_rpc(url, STARKNET_GETBLOCKWITHTXHASHES, {"block_id": block_id})
+    return json_rpc(url, STARKNET_GET_BLOCK_WITH_TX_HASHES, {"block_id": block_id})
 
 
 def rpc_starknet_getBlockWithTxs(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
-    return json_rpc(url, STARKNET_GETBLOCKWITHTXS, {"block_id": block_id})
+    return json_rpc(url, STARKNET_GET_BLOCK_WITH_TXS, {"block_id": block_id})
 
 
 def rpc_starknet_getBlockWithReceipts(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
-    return json_rpc(url, STARKNET_GETBLOCKWITHRECEIPTS, {"block_id": block_id})
+    return json_rpc(url, STARKNET_GET_BLOCK_WITH_RECEIPTS, {"block_id": block_id})
 
 
 def rpc_starknet_getStateUpdate(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
-    return json_rpc(url, STARKNET_GETSTATEUPDATE, {"block_id": block_id})
+    return json_rpc(url, STARKNET_GET_STATE_UPDATE, {"block_id": block_id})
 
 
 def rpc_starknet_getStorageAt(
@@ -72,10 +73,18 @@ def rpc_starknet_getStorageAt(
 ) -> dict[str, Any]:
     return json_rpc(
         url,
-        STARKNET_GETSTORAGEAT,
+        STARKNET_GET_STORAGE_AT,
         {
             "contract_address": contract_address,
             "key": contract_key,
             "block_id": block_id,
         },
+    )
+
+
+def rpc_starknet_getTransactionStatus(
+    url: str, transaction_hash: str
+) -> dict[str, Any]:
+    return json_rpc(
+        url, STARKNET_GET_TRANSACTION_STATUS, {"transaction_hash": transaction_hash}
     )
