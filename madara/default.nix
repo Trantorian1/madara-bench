@@ -95,15 +95,18 @@ let
   #   sha256 = "sha256-iCIQnlHMPmkjw4iDdwU5Da4udYjYl0tmUqj16za0xhU=";
   # };
 
-  # Creates a derivation of busybox with only `cat` accessible. This avoids
-  # bloating our docker image with unnecessary dependencies. We use busybox to
-  # shave of even more space with a tiny implementation of `cat`.
+  # Creates a derivation of busybox with only `cat` and `du` accessible. This
+  # avoids bloating our docker image with unnecessary dependencies. We use 
+  # busybox to shave of even more space with tiny implementation of these.
+  # `cat` is used to retrieve mounted secrets
+  # `du` is used to measure the size of the db
   cat = stdenv.mkDerivation {
     name = "minimal-cat";
     buildInputs = [ busybox ];
     buildCommand = ''
       mkdir -p $out/bin
       cp ${busybox}/bin/cat $out/bin/
+      cp ${busybox}/bin/du $out/bin/
     '';
   };
 
@@ -116,6 +119,8 @@ let
       --name madara              \
       --base-path /data/madara   \
       --network test             \
+      --rpc-external             \
+      --rpc-cors all             \
       --l1-endpoint $RPC_API_KEY \
       --gateway-key $GATEWAY_KEY
   '';
