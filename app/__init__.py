@@ -1,12 +1,11 @@
-import json
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 
 import docker
 import fastapi
 from docker.models.containers import Container
 
-from app import models, rpc, stats
+from app import error, models, rpc, stats
 
 MADARA: str = "madara_runner"
 MADARA_DB: str = "madara_runner_db"
@@ -19,24 +18,23 @@ REGEX_BLOCK_HASH: str = "^0x[a-fA-F0-9]+$"
 REGEX_CONTRACT_ADDRESS: str = "^0x[a-fA-F0-9]+$"
 REGEX_CONTRACT_KEY: str = "^0x[a-fA-F0-9]+$"
 
-
-@app.get(
-    "/bench/cpu/{node}",
-    responses={
-        404: {
-            "description": "The node could not be found",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        409: {
-            "description": "Node exists but did not respond",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        410: {
-            "description": "Node exists but is not running",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
+ERROR_CODES: dict[int, dict[str, Any]] = {
+    404: {
+        "description": "The node could not be found",
+        "model": error.ErrorMessage,
     },
-)
+    409: {
+        "description": "Node exists but did not respond",
+        "model": error.ErrorMessage,
+    },
+    410: {
+        "description": "Node exists but is not running",
+        "model": error.ErrorMessage,
+    },
+}
+
+
+@app.get("/bench/cpu/{node}", responses={**ERROR_CODES})
 async def node_get_cpu_normalized(node: models.NodeName):
     """Get node CPU usage.
 
@@ -52,23 +50,7 @@ async def node_get_cpu_normalized(node: models.NodeName):
         return container
 
 
-@app.get(
-    "/bench/cpu/system/{node}",
-    responses={
-        404: {
-            "description": "The node could not be found",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        409: {
-            "description": "Node exists but did not respond",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        410: {
-            "description": "Node exists but is not running",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-    },
-)
+@app.get("/bench/cpu/system/{node}", responses={**ERROR_CODES})
 async def node_get_cpu_system(node: models.NodeName):
     """Get node cpu usage.
 
@@ -83,23 +65,7 @@ async def node_get_cpu_system(node: models.NodeName):
         return container
 
 
-@app.get(
-    "/bench/memory/{node}",
-    responses={
-        404: {
-            "description": "The node could not be found",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        409: {
-            "description": "Node exists but did not respond",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        410: {
-            "description": "Node exists but is not running",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-    },
-)
+@app.get("/bench/memory/{node}", responses={**ERROR_CODES})
 async def node_get_memory(node: models.NodeName):
     """Get node memory usage.
 
@@ -113,23 +79,7 @@ async def node_get_memory(node: models.NodeName):
         return container
 
 
-@app.get(
-    "/bench/storage/{node}",
-    responses={
-        404: {
-            "description": "The node could not be found",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        409: {
-            "description": "Node exists but did not respond",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-        410: {
-            "description": "Node exists but is not running",
-            "content": {"application/json": {"example": {"message": "string"}}},
-        },
-    },
-)
+@app.get("/bench/storage/{node}", responses={**ERROR_CODES})
 async def node_get_storage(node: models.NodeName):
     """Returns node storage usage
 
@@ -144,14 +94,14 @@ async def node_get_storage(node: models.NodeName):
         return container
 
 
-@app.get("/info/docker/running")
+@app.get("/info/docker/running", responses={**ERROR_CODES})
 async def docker_get_running():
     """List all running container instances"""
     client = docker.client.from_env()
     client.containers.list()
 
 
-@app.get("/info/docker/ports/{node}")
+@app.get("/info/docker/ports/{node}", responses={**ERROR_CODES})
 async def docker_get_ports(node: models.NodeName):
     """List all the ports exposed by a node's container"""
 
@@ -162,7 +112,7 @@ async def docker_get_ports(node: models.NodeName):
         return container
 
 
-@app.get("/info/rpc/starknet_specVersion/{node}")
+@app.get("/info/rpc/starknet_specVersion/{node}", responses={**ERROR_CODES})
 async def starknet_specVersion(node: models.NodeName):
     container = stats.container_get(node)
     if isinstance(container, Container):
@@ -172,7 +122,7 @@ async def starknet_specVersion(node: models.NodeName):
         return container
 
 
-@app.get("/info/rpc/starknet_getBlockWithTxHashes/{node}/")
+@app.get("/info/rpc/starknet_getBlockWithTxHashes/{node}/", responses={**ERROR_CODES})
 async def starknet_getBlockWithTxHashes(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
@@ -199,7 +149,7 @@ async def starknet_getBlockWithTxHashes(
         return container
 
 
-@app.get("/info/rpc/starknet_getBlockWithTxs/{node}/")
+@app.get("/info/rpc/starknet_getBlockWithTxs/{node}/", responses={**ERROR_CODES})
 async def starknet_getBlockWithTxs(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
@@ -222,7 +172,7 @@ async def starknet_getBlockWithTxs(
         return container
 
 
-@app.get("/info/rpc/starknet_getBlockWithReceipts/{node}/")
+@app.get("/info/rpc/starknet_getBlockWithReceipts/{node}/", responses={**ERROR_CODES})
 async def starknet_getBlockWithReceipts(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
@@ -249,7 +199,7 @@ async def starknet_getBlockWithReceipts(
         return container
 
 
-@app.get("/info/rpc/starknet_getStateUpdate/{node}/")
+@app.get("/info/rpc/starknet_getStateUpdate/{node}/", responses={**ERROR_CODES})
 async def starknet_getStateUpdate(
     node: models.NodeName,
     block_hash: Annotated[str | None, fastapi.Query(pattern=REGEX_BLOCK_HASH)] = None,
@@ -272,7 +222,7 @@ async def starknet_getStateUpdate(
         return container
 
 
-@app.get("/info/rpc/starknet_getStorageAt/{node}/")
+@app.get("/info/rpc/starknet_getStorageAt/{node}/", responses={**ERROR_CODES})
 async def starknet_getStorageAt(
     node: models.NodeName,
     contract_address: Annotated[str, fastapi.Query(pattern=REGEX_CONTRACT_ADDRESS)],
