@@ -6,14 +6,43 @@ from docker import errors as docker_errors
 from docker.models.containers import Container
 from pydantic import BaseModel
 
-from .error import ErrorNodeNotFound, ErrorNodeNotRunning, ErrorNodeSilent
-
 
 class NodeName(str, Enum):
     madara = "madara"
 
+
 class ErrorMessage(BaseModel):
     message: str
+
+
+class ErrorNodeNotFound(fastapi.responses.JSONResponse):
+    def __init__(self, node: NodeName) -> None:
+        super().__init__(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            content={
+                "message": f"{node.capitalize()} node not found, it might not be running or have a different name"
+            },
+        )
+
+
+class ErrorNodeSilent(fastapi.responses.JSONResponse):
+    def __init__(self, node: NodeName) -> None:
+        super().__init__(
+            status_code=fastapi.status.HTTP_409_CONFLICT,
+            content={
+                "message": f"Failed to query {node.name.capitalize()} node docker, something is seriously wrong"
+            },
+        )
+
+
+class ErrorNodeNotRunning(fastapi.responses.JSONResponse):
+    def __init__(self, node: NodeName) -> None:
+        super().__init__(
+            status_code=fastapi.status.HTTP_410_GONE,
+            content={
+                "message": f"{node.name.capitalize()} node container is no longer running"
+            },
+        )
 
 
 def container_get(node: NodeName) -> Container | fastapi.responses.JSONResponse:

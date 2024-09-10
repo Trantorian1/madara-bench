@@ -1,17 +1,17 @@
+import json
 import logging
 
 import docker
 import fastapi
 from docker.models.containers import Container
 
-from app import stats
+from app import rpc, stats
 
 MADARA: str = "madara_runner"
 MADARA_DB: str = "madara_runner_db"
 
 logger = logging.getLogger(__name__)
 app = fastapi.FastAPI()
-
 
 
 @app.get("/bench/cpu/{node}", responses={
@@ -204,3 +204,22 @@ async def docker_get_running():
     client = docker.client.from_env()
     client.containers.list()
 
+
+@app.get("/info/docker/ports/{node}")
+async def docker_get_ports(node: stats.NodeName):
+    """List all the ports exposed by a node's container"""
+
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        return container.ports
+    else:
+        return container
+
+@app.get("/info/rpc/starknet_specVersion/{node}")
+async def starknet_specVersion(node: stats.NodeName):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_specVersion(url)
+    else:
+        return container
