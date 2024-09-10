@@ -262,3 +262,16 @@ async def starknet_getTransactionStatus(
         return rpc.rpc_starknet_getTransactionStatus(url, transaction_hash)
     else:
         return container
+
+
+@app.get("/info/rpc/starknet_getTransactionByHash/{node}/", responses={**ERROR_CODES})
+async def starknet_getTransactionByHash(
+    node: models.NodeName,
+    transaction_hash: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_getTransactionByHash(url, transaction_hash)
+    else:
+        return container
