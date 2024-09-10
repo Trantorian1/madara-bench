@@ -70,12 +70,12 @@ fclean: clean
 	done
 	@echo -e "$(WARN)artefacts cleaned$(RESET)"
 
-.PHONY: re
-re: clean
+.PHONY: restart
+restart: clean
 	@make --silent start
 
-.PHONY: fre
-fre: fclean
+.PHONY: frestart
+frestart: fclean
 	@make --silent start
 
 .PHONY: debug
@@ -85,6 +85,7 @@ debug:
 
 %image.tar.gz: node = $(@D)
 %image.tar.gz: %default.nix
+	@rm -f $(node)/image.tar.gz
 	@echo -e "$(TERTIARY)building$(RESET) $(PASS)$(node)$(RESET)" ;
 	@nix-build $(node) -o $(node)/result
 	@$(node)/result/bin/copyto $(node)/image.tar.gz
