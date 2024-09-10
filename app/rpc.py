@@ -26,6 +26,7 @@ STARKNET_GET_CLASS: str = "starknet_getClass"
 STARKNET_GET_CLASS_HASH_AT: str = "starknet_getClassHashAt"
 STARKNET_GET_CLASS_AT: str = "starknet_getClassAt"
 STARKNET_GET_BLOCK_TRANSACTION_COUNT: str = "starknet_getBlockTransactionCount"
+STARKNET_CALL: str = "starknet_call"
 
 
 def json_rpc(
@@ -169,3 +170,13 @@ def rpc_starknet_getBlockTransactionCount(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ):
     return json_rpc(url, STARKNET_GET_BLOCK_TRANSACTION_COUNT, {"block_id": block_id})
+
+
+def rpc_starknet_call(
+    url: str,
+    request: models.CallRequest,
+    block_id: str | dict[str, str] | dict[str, int],
+):
+    return json_rpc(
+        url, STARKNET_CALL, {"request": vars(request), "block_id": block_id}
+    )

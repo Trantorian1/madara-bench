@@ -1,7 +1,12 @@
 from enum import Enum
-from typing import Union
+from typing import Annotated
 
+import fastapi
 import pydantic
+
+REGEX_HEX: str = "^0x[a-fA-F0-9]+$"
+
+HexEntry = Annotated[str, fastapi.Query(pattern=REGEX_HEX)]
 
 
 class NodeName(str, Enum):
@@ -13,7 +18,7 @@ class BlockTag(str, Enum):
     pending = "pending"
 
 
-class BlockId(Enum):
-    block_hash: str
-    block_number: int
-    block_tag: BlockTag
+class CallRequest(pydantic.BaseModel):
+    contract_address: HexEntry
+    entry_point_selector: HexEntry
+    calldata: list[HexEntry] = []
