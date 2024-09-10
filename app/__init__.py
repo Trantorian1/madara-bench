@@ -192,3 +192,26 @@ async def starknet_getBlockWithTxHashes(
             )
     else:
         return container
+
+
+@app.get("/info/rpc/starknet_getBlockWithTxs/{node}/")
+async def starknet_getBlockWithTxs(
+    node: models.NodeName,
+    block_hash: Annotated[str | None, fastapi.Query(pattern="^0x[a-fA-F0-9]+$")] = None,
+    block_numer: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_tag: models.BlockTag | None = None,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        if isinstance(block_hash, str):
+            return rpc.rpc_starknet_getBlockWithTxs(url, {"block_hash": block_hash})
+        elif isinstance(block_numer, int):
+            return rpc.rpc_starknet_getBlockWithTxs(url, {"block_number": block_numer})
+        elif isinstance(block_tag, models.BlockTag):
+            return rpc.rpc_starknet_getBlockWithTxs(
+                url,
+                block_tag.name,
+            )
+    else:
+        return container
