@@ -20,6 +20,7 @@ STARKNET_GET_TRANSACTION_BY_HASH: str = "starknet_getTransactionByHash"
 STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX: str = (
     "starknet_getTransactionByBlockIdAndIndex"
 )
+STARKNET_GET_TRANSACTION_RECEIPT: str = "starknet_getTransactionReceipt"
 
 
 def json_rpc(
@@ -109,4 +110,10 @@ def rpc_starknet_getTransactionByBlockIdAndIndex(
         url,
         STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX,
         {"block_id": block_id, "index": transaction_index},
+    )
+
+
+def rpc_starknet_getTransactionReceipt(url: str, transaction_hash: str):
+    return json_rpc(
+        url, STARKNET_GET_TRANSACTION_RECEIPT, {"transaction_hash": transaction_hash}
     )

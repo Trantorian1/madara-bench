@@ -305,3 +305,16 @@ async def starknet_getTransactionByBlockIdAndIndex(
             )
     else:
         return container
+
+
+@app.get("/info/rpc/starknet_getTransactionReceipt/{node}/", responses={**ERROR_CODES})
+async def starknet_getTransactionReceipt(
+    node: models.NodeName,
+    transaction_hash: Annotated[str, fastapi.Query(pattern=REGEX_HEX)],
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_getTransactionReceipt(url, transaction_hash)
+    else:
+        return container
