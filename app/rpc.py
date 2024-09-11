@@ -28,6 +28,7 @@ STARKNET_GET_BLOCK_TRANSACTION_COUNT: str = "starknet_getBlockTransactionCount"
 STARKNET_CALL: str = "starknet_call"
 STARKNET_ESTIMATE_FEE: str = "starknet_estimateFee"
 STARKNET_ESTIMATE_MESSAGE_FEE: str = "starknet_estimateMessageFee"
+STARKNET_CHAIN_ID: str = "starknet_chainId"
 
 
 def json_rpc(
@@ -137,7 +138,7 @@ def rpc_starknet_getTransactionByBlockIdAndIndex(
     url: str,
     transaction_index: int,
     block_id: str | dict[str, str] | dict[str, int],
-):
+) -> dict[str, Any]:
     return json_rpc(
         url,
         STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX,
@@ -145,7 +146,9 @@ def rpc_starknet_getTransactionByBlockIdAndIndex(
     )
 
 
-def rpc_starknet_getTransactionReceipt(url: str, transaction_hash: str):
+def rpc_starknet_getTransactionReceipt(
+    url: str, transaction_hash: str
+) -> dict[str, Any]:
     return json_rpc(
         url,
         STARKNET_GET_TRANSACTION_RECEIPT,
@@ -155,7 +158,7 @@ def rpc_starknet_getTransactionReceipt(url: str, transaction_hash: str):
 
 def rpc_starnet_getClass(
     url: str, class_hash: str, block_id: str | dict[str, str] | dict[str, int]
-):
+) -> dict[str, Any]:
     return json_rpc(
         url,
         STARKNET_GET_CLASS,
@@ -167,7 +170,7 @@ def rpc_starknet_getClassHashAt(
     url: str,
     contract_address: str,
     block_id: str | dict[str, str] | dict[str, int],
-):
+) -> dict[str, Any]:
     return json_rpc(
         url,
         STARKNET_GET_CLASS_HASH_AT,
@@ -179,7 +182,7 @@ def rpc_starknet_getClassAt(
     url: str,
     contract_address: str,
     block_id: str | dict[str, str] | dict[str, int],
-):
+) -> dict[str, Any]:
     return json_rpc(
         url,
         STARKNET_GET_CLASS_AT,
@@ -189,7 +192,7 @@ def rpc_starknet_getClassAt(
 
 def rpc_starknet_getBlockTransactionCount(
     url: str, block_id: str | dict[str, str] | dict[str, int]
-):
+) -> dict[str, Any]:
     return json_rpc(
         url, STARKNET_GET_BLOCK_TRANSACTION_COUNT, {"block_id": block_id}
     )
@@ -199,7 +202,7 @@ def rpc_starknet_call(
     url: str,
     request: models.body.Call,
     block_id: str | dict[str, str] | dict[str, int],
-):
+) -> dict[str, Any]:
     return json_rpc(
         url, STARKNET_CALL, {"request": vars(request), "block_id": block_id}
     )
@@ -209,7 +212,7 @@ def rpc_estimateFee(
     url: str,
     body: models.body.EstimateFee,
     block_id: str | dict[str, str] | dict[str, int],
-):
+) -> dict[str, Any]:
     return json_rpc(
         url,
         STARKNET_ESTIMATE_FEE,
@@ -225,7 +228,7 @@ def rpc_estimateMessageFee(
     url: str,
     body: models.body.EstimateMessageFee,
     block_id: str | dict[str, str] | dict[str, int],
-):
+) -> dict[str, Any]:
     return json_rpc(
         url,
         STARKNET_ESTIMATE_MESSAGE_FEE,
@@ -237,3 +240,7 @@ def rpc_estimateMessageFee(
             "block_id": block_id,
         },
     )
+
+
+def rpc_chainId(url: str) -> dict[str, Any]:
+    return json_rpc(url, STARKNET_CHAIN_ID)
