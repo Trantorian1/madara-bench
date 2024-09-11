@@ -679,9 +679,131 @@ class TxDeployV1(pydantic.BaseModel):
         ),
     ]
 
+    model_config = {
+        "json_schema_extra": {
+            "description": (
+                "Deploys an account contract, charges fee from the pre-funded "
+                "account addresses"
+            )
+        }
+    }
+
+
+class TxDeployV3(pydantic.BaseModel):
+    type: Annotated[
+        TxType,
+        pydantic.Field(
+            description=(
+                "The transaction type, will default to DEPLOY_ACCOUNT for "
+                "deploy transactions. You should not pass any other value "
+                "than this"
+            )
+        ),
+    ] = TxType.DEPLOY_ACCOUNT
+    version: Annotated[
+        TxVersion,
+        pydantic.Field(
+            description=(
+                "The transaction version, will default to V3. You "
+                "should not pass any other value than this."
+            )
+        ),
+    ] = TxVersion.V3
+    signature: Annotated[
+        HexField, pydantic.Field(description="A transaction signature")
+    ]
+    nonce: Annotated[
+        HexField,
+        pydantic.Field(description="Transaction nonce, avoids replay attacks"),
+    ]
+    contract_address_salt: Annotated[
+        HexField,
+        pydantic.Field(
+            description="The salt for the address of the deployed contract"
+        ),
+    ]
+    constructor_calldata: Annotated[
+        list[HexField],
+        pydantic.Field(
+            description=(
+                "The parameters passed to the constructor, represented as "
+                "field elements"
+            )
+        ),
+    ]
+    class_hash: Annotated[
+        HexField,
+        pydantic.Field(
+            description=("The hash of the deployed contract's class")
+        ),
+    ]
+    resource_bounds: Annotated[
+        ResourceBounds,
+        pydantic.Field(
+            description=(
+                "Resource bounds for the transaction execution, allow you to "
+                "specify a max gas price for l1 and l2"
+            )
+        ),
+    ]
+    tip: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The tip for the transaction. A higher tip means your "
+                "transaction should be processed faster."
+            )
+        ),
+    ]
+    paymaster_data: Annotated[
+        list[HexField],
+        pydantic.Field(
+            description=(
+                "Data needed to allow the paymaster to pay for the "
+                "transaction in native tokens"
+            )
+        ),
+    ]
+    acount_deployment_data: Annotated[
+        list[HexField],
+        pydantic.Field(
+            description=(
+                "data needed to deploy the account contract from "
+                "which this tx will be initiated"
+            )
+        ),
+    ]
+    nonce_data_availability_mode: Annotated[
+        DaMode,
+        pydantic.Field(
+            description=(
+                "The storage domain of the account's nonce (an account has a "
+                "nonce per DA mode)"
+            )
+        ),
+    ]
+    fee_data_availability_mode: Annotated[
+        DaMode,
+        pydantic.Field(
+            description=(
+                "The storage domain of the account's balance from "
+                "which fee will be charged"
+            )
+        ),
+    ]
+
+    model_config = {
+        "json_schema_extra": {
+            "description": (
+                "Deploys an account contract, charges fee from the pre-funded "
+                "account addresses"
+            )
+        }
+    }
+
 
 class EstimeFeeRequest(pydantic.BaseModel):
-    schema_aliased: Annotated[
+    request: Annotated[
         list[
             TxInvokeV0
             | TxInvokeV1
@@ -690,9 +812,13 @@ class EstimeFeeRequest(pydantic.BaseModel):
             | TxDeclareV2
             | TxDeclareV3
             | TxDeployV1
+            | TxDeployV3
         ],
         pydantic.Field(
-            alias="schema",
-            description="a sequence of transactions to estimate, running each transaction on the state resulting from applying all the previous ones",
+            description=(
+                "a sequence of transactions to estimate, running each "
+                "transaction on the state resulting from applying all the "
+                "previous ones"
+            ),
         ),
     ]
