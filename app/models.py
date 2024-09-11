@@ -198,7 +198,23 @@ class CairoV1EntryPoint(pydantic.BaseModel):
     ]
 
 
-class CairoV1EntryPointByType(pydantic.BaseModel):
+class CairoV2EntryPoint(pydantic.BaseModel):
+    selector: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "A unique identifier of the entry point (function) in the "
+                "program"
+            )
+        ),
+    ]
+    function_idx: Annotated[
+        int,
+        pydantic.Field(description="The index of the function in the program"),
+    ]
+
+
+class CairoV1EntryPointsByType(pydantic.BaseModel):
     CONSTRUCTOR: Annotated[
         list[CairoV1EntryPoint],
         pydantic.Field(description="Deprecated constructor", deprecated=True),
@@ -320,7 +336,7 @@ class CairoV1ContractClass(pydantic.BaseModel):
         ),
     ]
     entry_points_by_type: Annotated[
-        CairoV1EntryPointByType,
+        CairoV1EntryPointsByType,
         pydantic.Field(
             description="Deprecated entry point by type", deprecated=True
         ),
@@ -388,6 +404,117 @@ class TxDeclareV1(pydantic.BaseModel):
     ]
 
     model_config = {"json_schema_extra": {"deprecated": True}}
+
+
+class CairoV2EntryPointsByType(pydantic.BaseModel):
+    CONTRUCTOR: Annotated[
+        list[CairoV2EntryPoint],
+        pydantic.Field(description="Contract class contructor"),
+    ]
+    EXTERNAL: Annotated[
+        list[CairoV2EntryPoint], pydantic.Field(description="External")
+    ]
+    L1_HANDLER: Annotated[
+        list[CairoV2EntryPoint], pydantic.Field(description="L1 Handler")
+    ]
+
+
+class CairoV2ContractClass(pydantic.BaseModel):
+    sierra_program: Annotated[
+        list[HexField],
+        pydantic.Field(
+            description=(
+                "The list of Sierra instructions of which the program "
+                "consists, encoded as field elements"
+            )
+        ),
+    ]
+    contract_class_version: Annotated[
+        str,
+        pydantic.Field(
+            description=(
+                "The version of the contract class object. Currently, the "
+                "Starknet OS supports version 0.1.0"
+            ),
+            default="0.1.0",
+        ),
+    ]
+    entry_points_by_type: Annotated[
+        CairoV2EntryPointsByType,
+        pydantic.Field(
+            description=(
+                "Entry points by type. These are 'CONSTRUCTOR', 'EXTERNAL' "
+                "and 'L1_HANDLER'"
+            )
+        ),
+    ]
+    abi: Annotated[
+        str,
+        pydantic.Field(
+            description=(
+                "The class ABI, as supplied by the user declaring the class"
+            )
+        ),
+    ]
+
+
+class TxDeclareV2(pydantic.BaseModel):
+    type: Annotated[
+        TxType,
+        pydantic.Field(
+            description=(
+                "The transaction type, will default to DECLARE for "
+                "declare transactions. You should not pass any other value "
+                "than this"
+            )
+        ),
+    ] = TxType.DECLARE
+    sender_address: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The address of the account contract sending the declaration "
+                "transaction"
+            )
+        ),
+    ]
+    compiled_class_hash: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The hash of the Cairo assembly resulting from the Sierra"
+            )
+        ),
+    ]
+    max_hash: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The maximal fee that can be charged for including the "
+                "transaction"
+            )
+        ),
+    ]
+    version: Annotated[
+        TxVersion,
+        pydantic.Field(
+            description=(
+                "The transaction version, will default to V2. You "
+                "should not pass any other value than this."
+            )
+        ),
+    ] = TxVersion.V2
+    signature: Annotated[
+        HexField, pydantic.Field(description="A transaction signature")
+    ]
+    nonce: Annotated[
+        HexField,
+        pydantic.Field(description="Transaction nonce, avoids replay attacks"),
+    ]
+    contract_class: Annotated[
+        CairoV2ContractClass,
+        pydantic.Field(description="The class to be declared"),
+    ]
 
 
 class EstimeFeeRequest(pydantic.BaseModel):
