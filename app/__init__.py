@@ -122,10 +122,14 @@ async def starknet_specVersion(node: models.NodeName):
         return container
 
 
-@app.get("/info/rpc/starknet_getBlockWithTxHashes/{node}/", responses={**ERROR_CODES})
+@app.get(
+    "/info/rpc/starknet_getBlockWithTxHashes/{node}/", responses={**ERROR_CODES}
+)
 async def starknet_getBlockWithTxHashes(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -141,10 +145,14 @@ async def starknet_getBlockWithTxHashes(
         return container
 
 
-@app.get("/info/rpc/starknet_getBlockWithTxs/{node}/", responses={**ERROR_CODES})
+@app.get(
+    "/info/rpc/starknet_getBlockWithTxs/{node}/", responses={**ERROR_CODES}
+)
 async def starknet_getBlockWithTxs(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -160,10 +168,14 @@ async def starknet_getBlockWithTxs(
         return container
 
 
-@app.get("/info/rpc/starknet_getBlockWithReceipts/{node}/", responses={**ERROR_CODES})
+@app.get(
+    "/info/rpc/starknet_getBlockWithReceipts/{node}/", responses={**ERROR_CODES}
+)
 async def starknet_getBlockWithReceipts(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -182,7 +194,9 @@ async def starknet_getBlockWithReceipts(
 @app.get("/info/rpc/starknet_getStateUpdate/{node}/", responses={**ERROR_CODES})
 async def starknet_getStateUpdate(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -203,7 +217,9 @@ async def starknet_getStorageAt(
     node: models.NodeName,
     contract_address: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
     contract_key: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -221,7 +237,9 @@ async def starknet_getStorageAt(
         return container
 
 
-@app.get("/info/rpc/starknet_getTransactionStatus/{node}/", responses={**ERROR_CODES})
+@app.get(
+    "/info/rpc/starknet_getTransactionStatus/{node}/", responses={**ERROR_CODES}
+)
 async def starknet_getTransactionStatus(
     node: models.NodeName,
     transaction_hash: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
@@ -234,7 +252,9 @@ async def starknet_getTransactionStatus(
         return container
 
 
-@app.get("/info/rpc/starknet_getTransactionByHash/{node}/", responses={**ERROR_CODES})
+@app.get(
+    "/info/rpc/starknet_getTransactionByHash/{node}/", responses={**ERROR_CODES}
+)
 async def starknet_getTransactionByHash(
     node: models.NodeName,
     transaction_hash: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
@@ -254,7 +274,9 @@ async def starknet_getTransactionByHash(
 async def starknet_getTransactionByBlockIdAndIndex(
     node: models.NodeName,
     transaction_index: Annotated[int, fastapi.Query(ge=0)],
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -272,7 +294,10 @@ async def starknet_getTransactionByBlockIdAndIndex(
         return container
 
 
-@app.get("/info/rpc/starknet_getTransactionReceipt/{node}/", responses={**ERROR_CODES})
+@app.get(
+    "/info/rpc/starknet_getTransactionReceipt/{node}/",
+    responses={**ERROR_CODES},
+)
 async def starknet_getTransactionReceipt(
     node: models.NodeName,
     transaction_hash: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
@@ -289,7 +314,9 @@ async def starknet_getTransactionReceipt(
 async def starknet_getClass(
     node: models.NodeName,
     class_hash: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -309,7 +336,9 @@ async def starknet_getClass(
 async def starknet_getClassHashAt(
     node: models.NodeName,
     contract_address: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -320,7 +349,9 @@ async def starknet_getClassHashAt(
         if isinstance(block_id, error.ErrorBlockIdMissing):
             return block_id
         else:
-            return rpc.rpc_starknet_getClassHashAt(url, contract_address, block_id)
+            return rpc.rpc_starknet_getClassHashAt(
+                url, contract_address, block_id
+            )
     else:
         return container
 
@@ -329,7 +360,9 @@ async def starknet_getClassHashAt(
 async def starknet_getClassAt(
     node: models.NodeName,
     contract_address: Annotated[str, fastapi.Query(pattern=models.REGEX_HEX)],
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -346,11 +379,14 @@ async def starknet_getClassAt(
 
 
 @app.get(
-    "/info/rpc/starknet_getBlockTransactionCount/{node}/", responses={**ERROR_CODES}
+    "/info/rpc/starknet_getBlockTransactionCount/{node}/",
+    responses={**ERROR_CODES},
 )
 async def starknet_getBlockTransactionCount(
     node: models.NodeName,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -370,7 +406,9 @@ async def starknet_getBlockTransactionCount(
 async def starknet_call(
     node: models.NodeName,
     request: models.CallRequest,
-    block_hash: Annotated[str | None, fastapi.Query(pattern=models.REGEX_HEX)] = None,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
     block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
     block_tag: models.BlockTag | None = None,
 ):
@@ -384,3 +422,16 @@ async def starknet_call(
             return rpc.rpc_starknet_call(url, request, block_id)
     else:
         return container
+
+
+@app.post("/info/rpc/starknet_estimeFee/{node}")
+async def starknet_estimateFee(
+    node: models.NodeName,
+    request: models.EstimeFeeRequest,
+    block_hash: Annotated[
+        str | None, fastapi.Query(pattern=models.REGEX_HEX)
+    ] = None,
+    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
+    block_tag: models.BlockTag | None = None,
+):
+    pass
