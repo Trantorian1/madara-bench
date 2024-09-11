@@ -420,3 +420,25 @@ async def starknet_estimateFee(
             return rpc.rpc_estimateFee(url, body, block_id)
     else:
         return container
+
+
+@app.post(
+    "/info/rpc/starknet_estimateMessageFee/{node}", responses={**ERROR_CODES}
+)
+async def starknet_estimateMessageFee(
+    node: Annotated[models.NodeName, fastapi.Path()],
+    body: models.body.EstimateMessageFee,
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.QueryBlockTag = None,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_estimateMessageFee(url, body, block_id)
+    else:
+        return container

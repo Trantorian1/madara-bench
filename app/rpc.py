@@ -27,6 +27,7 @@ STARKNET_GET_CLASS_AT: str = "starknet_getClassAt"
 STARKNET_GET_BLOCK_TRANSACTION_COUNT: str = "starknet_getBlockTransactionCount"
 STARKNET_CALL: str = "starknet_call"
 STARKNET_ESTIMATE_FEE: str = "starknet_estimateFee"
+STARKNET_ESTIMATE_MESSAGE_FEE: str = "starknet_estimateMessageFee"
 
 
 def json_rpc(
@@ -215,6 +216,24 @@ def rpc_estimateFee(
         {
             "request": body.request,
             "simulation_flags": body.simulation_flags,
+            "block_id": block_id,
+        },
+    )
+
+
+def rpc_estimateMessageFee(
+    url: str,
+    body: models.body.EstimateMessageFee,
+    block_id: str | dict[str, str] | dict[str, int],
+):
+    return json_rpc(
+        url,
+        STARKNET_ESTIMATE_MESSAGE_FEE,
+        {
+            "from_address": body.from_address,
+            "to_address": body.to_address,
+            "entry_point_selector": body.entry_point_selector,
+            "payload": body.payload,
             "block_id": block_id,
         },
     )

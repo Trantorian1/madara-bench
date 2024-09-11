@@ -60,3 +60,41 @@ class _BodyEstimateFee(pydantic.BaseModel):
 
 
 EstimateFee = Annotated[_BodyEstimateFee, fastapi.Body(include_in_schema=False)]
+
+
+class _BodyEstimateMessageFee(pydantic.BaseModel):
+    from_address: Annotated[
+        FieldHex,
+        pydantic.Field(
+            title="Ethereum address",
+            description="The address of the L1 contract sending the message",
+        ),
+    ]
+    to_address: Annotated[
+        FieldHex,
+        pydantic.Field(
+            title="Starknet address",
+            description="The target L2 address the message is sent to",
+        ),
+    ]
+    entry_point_selector: Annotated[
+        FieldHex,
+        pydantic.Field(
+            description=(
+                "Entry point in the L1 contract used to send the message"
+            )
+        ),
+    ]
+    payload: Annotated[
+        list[FieldHex],
+        pydantic.Field(
+            description=(
+                "The message payload being sent to an address on Starknet"
+            )
+        ),
+    ]
+
+
+EstimateMessageFee = Annotated[
+    _BodyEstimateMessageFee, fastapi.Body(include_in_schema=False)
+]
