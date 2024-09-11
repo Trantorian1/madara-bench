@@ -6,17 +6,6 @@ from app.models.query import BlockId
 
 from .models import *
 
-TX = (
-    TxInvokeV0
-    | TxInvokeV1
-    | TxInvokeV3
-    | TxDeclareV1
-    | TxDeclareV2
-    | TxDeclareV3
-    | TxDeployV1
-    | TxDeployV3
-)
-
 
 def doc_tx_invoke_v1() -> dict[str, Any]:
     tx = TxInvokeV1(
@@ -28,6 +17,19 @@ def doc_tx_invoke_v1() -> dict[str, Any]:
     )
 
     return tx.model_dump()
+
+
+TX = Annotated[
+    TxInvokeV0
+    | TxInvokeV1
+    | TxInvokeV3
+    | TxDeclareV1
+    | TxDeclareV2
+    | TxDeclareV3
+    | TxDeployV1
+    | TxDeployV3,
+    pydantic.Field(examples=[doc_tx_invoke_v1()]),
+]
 
 
 class _BodyCall(pydantic.BaseModel):
@@ -48,7 +50,6 @@ class _BodyEstimateFee(pydantic.BaseModel):
                 "transaction on the state resulting from applying all the "
                 "previous ones"
             ),
-            examples=[doc_tx_invoke_v1()],
         ),
     ]
     simulation_flags: Annotated[
@@ -147,3 +148,24 @@ class _BodyGetEvents(pydantic.BaseModel):
 
 
 GetEvents = Annotated[_BodyGetEvents, fastapi.Body(include_in_schema=False)]
+
+
+class _BodySimulateTransactions(pydantic.BaseModel):
+    transactions: Annotated[
+        list[TX],
+        pydantic.Field(
+            description="The transactions to simulate",
+            examples=[[doc_tx_invoke_v1(), doc_tx_invoke_v1()]],
+        ),
+    ]
+    simulation_flags: Annotated[
+        SimulationFlags,
+        pydantic.Field(
+            description="Describes what parts of the transaction should be executed"
+        ),
+    ]
+
+
+SimulateTransactions = Annotated[
+    _BodySimulateTransactions, fastapi.Body(include_in_schema=False)
+]

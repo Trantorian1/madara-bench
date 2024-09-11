@@ -31,6 +31,10 @@ STARKNET_ESTIMATE_MESSAGE_FEE: str = "starknet_estimateMessageFee"
 STARKNET_CHAIN_ID: str = "starknet_chainId"
 STARKNET_SYNCING: str = "starknet_syncing"
 STARKNET_GET_EVENTS: str = "starknet_getEvents"
+STARKNET_GET_NONCE: str = "starknet_getNonce"
+
+# Trace API
+STARKNET_SIMULATE_TRANSACTIONS: str = "starknet_simulateTransactions"
 
 
 def json_rpc(
@@ -210,7 +214,7 @@ def rpc_starknet_call(
     )
 
 
-def rpc_estimateFee(
+def rpc_starknet_estimateFee(
     url: str,
     body: models.body.EstimateFee,
     block_id: str | dict[str, str] | dict[str, int],
@@ -226,7 +230,7 @@ def rpc_estimateFee(
     )
 
 
-def rpc_estimateMessageFee(
+def rpc_starknet_estimateMessageFee(
     url: str,
     body: models.body.EstimateMessageFee,
     block_id: str | dict[str, str] | dict[str, int],
@@ -244,13 +248,43 @@ def rpc_estimateMessageFee(
     )
 
 
-def rpc_chainId(url: str) -> dict[str, Any]:
+def rpc_starknet_chainId(url: str) -> dict[str, Any]:
     return json_rpc(url, STARKNET_CHAIN_ID)
 
 
-def rpc_syncing(url: str) -> dict[str, Any]:
+def rpc_starknet_syncing(url: str) -> dict[str, Any]:
     return json_rpc(url, STARKNET_SYNCING)
 
 
-def rcp_getEvents(url: str, body: models.body.GetEvents) -> dict[str, Any]:
+def rcp_starknet_getEvents(
+    url: str, body: models.body.GetEvents
+) -> dict[str, Any]:
     return json_rpc(url, STARKNET_GET_EVENTS, {"filter": body})
+
+
+def rpc_starknet_getNonce(
+    url: str,
+    contract_address: models.query.ContractAddress,
+    block_id: str | dict[str, str] | dict[str, int],
+) -> dict[str, Any]:
+    return json_rpc(
+        url,
+        STARKNET_GET_NONCE,
+        {"block_id": block_id, "contract_address": contract_address},
+    )
+
+
+def rpc_starknet_simulateTransactions(
+    url: str,
+    body: models.body.SimulateTransactions,
+    block_id: str | dict[str, str] | dict[str, int],
+):
+    return json_rpc(
+        url,
+        STARKNET_SIMULATE_TRANSACTIONS,
+        {
+            "block_id": block_id,
+            "transactions": body.transactions,
+            "simulation_flags": body.simulation_flags,
+        },
+    )

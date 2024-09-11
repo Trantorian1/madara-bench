@@ -901,12 +901,17 @@ class TxDeployV3(pydantic.BaseModel):
 
 class SimulationFlags(str, Enum):
     SKIP_VALIDATE = "SKIP_VALIDATE"
+    SKIP_FEE_CHARGE = "SKIP_FEE_CHARGE"
 
     model_config = {
         "json_schema_extra": {
             "description": (
                 "Flags that indicate how to simulate a given transaction. By "
-                "default, the sequencer behavior is replicated locally"
+                "default, the sequencer behavior is replicated locally "
+                "(enough funds are expected to be in the account, and fee "
+                "will be deducted from the balance before the simulation of "
+                "the next transaction). To skip the fee charge, use the "
+                "SKIP_FEE_CHARGE flag."
             )
         }
     }
