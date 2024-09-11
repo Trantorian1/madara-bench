@@ -540,3 +540,34 @@ async def starknet_traceBlockTransactions(
             return rpc.rpc_starknet_traceBlockTransactions(url, block_id)
     else:
         return container
+
+
+@app.post(
+    "/info/rpc/starknet_traceTransaction/{node}/",
+    responses={**ERROR_CODES},
+)
+async def starknet_traceTransaction(
+    node: models.NodeName,
+    transaction_hash: models.query.TxHash,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_traceTransaction(url, transaction_hash)
+    else:
+        return container
+
+
+@app.post(
+    "/info/rpc/starknet_addDeclareTransaction/{node}/",
+    responses={**ERROR_CODES},
+)
+async def starknet_addDeclareTransaction(
+    node: models.NodeName, declare_transaction: models.body.TxDeclare
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_addDeclareTransaction(url, declare_transaction)
+    else:
+        return container

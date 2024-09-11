@@ -36,6 +36,10 @@ STARKNET_GET_NONCE: str = "starknet_getNonce"
 # Trace API
 STARKNET_SIMULATE_TRANSACTIONS: str = "starknet_simulateTransactions"
 STARKNET_TRACE_BLOCK_TRANSACTIONS: str = "starknet_traceBlockTransactions"
+STARKNET_TRACE_TRANSACTION: str = "starknet_traceTransaction"
+
+# ADD API
+STARKNET_ADD_DECLARE_TRANSACTION: str = "starknet_addDeclareTransaction"
 
 
 def json_rpc(
@@ -297,4 +301,24 @@ def rpc_starknet_traceBlockTransactions(
 ) -> dict[str, Any]:
     return json_rpc(
         url, STARKNET_TRACE_BLOCK_TRANSACTIONS, {"block_id": block_id}
+    )
+
+
+def rpc_starknet_traceTransaction(
+    url: str, transaction_hash: models.query.TxHash
+) -> dict[str, Any]:
+    return json_rpc(
+        url,
+        STARKNET_TRACE_TRANSACTION,
+        {"transaction_hash": transaction_hash},
+    )
+
+
+def rpc_starknet_addDeclareTransaction(
+    url: str, declare_transaction: models.body.TxDeclare
+) -> dict[str, Any]:
+    return json_rpc(
+        url,
+        STARKNET_ADD_DECLARE_TRANSACTION,
+        {"declare_transaction": declare_transaction},
     )

@@ -7,7 +7,7 @@ from app.models.query import BlockId
 from .models import *
 
 
-def doc_tx_invoke_v1() -> dict[str, Any]:
+def ex_tx_invoke() -> dict[str, Any]:
     tx = TxInvokeV1(
         sender_address="0x0",
         calldata=["0x0"],
@@ -19,16 +19,42 @@ def doc_tx_invoke_v1() -> dict[str, Any]:
     return tx.model_dump()
 
 
-TX = Annotated[
-    TxInvokeV0
-    | TxInvokeV1
-    | TxInvokeV3
-    | TxDeclareV1
-    | TxDeclareV2
-    | TxDeclareV3
-    | TxDeployV1
-    | TxDeployV3,
-    pydantic.Field(examples=[doc_tx_invoke_v1()]),
+def ex_tx_declare() -> dict[str, Any]:
+    tx = TxDeclareV2(
+        sender_address="0x0",
+        compiled_class_hash="0x0",
+        max_hash="0x0",
+        signature="0x0",
+        nonce="0x0",
+        contract_class=CairoV2ContractClass(
+            sierra_program=["0x0"],
+            contract_class_version="0.1.0",
+            entry_points_by_type=CairoV2EntryPointsByType(
+                CONTRUCTOR=[], EXTERNAL=[], L1_HANDLER=[]
+            ),
+            abi="",
+        ),
+    )
+
+    return tx.model_dump()
+
+
+TxInvoke = Annotated[
+    TxInvokeV0 | TxInvokeV1 | TxInvokeV3,
+    fastapi.Body(examples=[ex_tx_invoke()]),
+]
+
+
+TxDeclare = Annotated[
+    TxDeclareV1 | TxDeclareV2 | TxDeclareV3,
+    fastapi.Body(examples=[ex_tx_declare()]),
+]
+
+TxDeploy = TxDeployV1 | TxDeclareV3
+
+Tx = Annotated[
+    TxInvoke | TxDeclare | TxDeploy,
+    fastapi.Body(examples=[ex_tx_invoke()]),
 ]
 
 
@@ -43,7 +69,7 @@ Call = Annotated[_BodyCall, fastapi.Body(include_in_schema=False)]
 
 class _BodyEstimateFee(pydantic.BaseModel):
     request: Annotated[
-        TX,
+        Tx,
         fastapi.Body(
             description=(
                 "a sequence of transactions to estimate, running each "
@@ -152,10 +178,10 @@ GetEvents = Annotated[_BodyGetEvents, fastapi.Body(include_in_schema=False)]
 
 class _BodySimulateTransactions(pydantic.BaseModel):
     transactions: Annotated[
-        list[TX],
+        list[Tx],
         pydantic.Field(
             description="The transactions to simulate",
-            examples=[[doc_tx_invoke_v1(), doc_tx_invoke_v1()]],
+            examples=[[ex_tx_invoke(), ex_tx_invoke()]],
         ),
     ]
     simulation_flags: Annotated[
