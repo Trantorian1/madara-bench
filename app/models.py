@@ -1,13 +1,22 @@
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Any
 
+import fastapi
 import pydantic
 
 REGEX_HEX: str = "^0x[a-fA-F0-9]+$"
 REGEX_BASE_64: str = "^0x[a-zA-Z0-9]+$"
 
-HexField = Annotated[str, pydantic.Field(pattern=REGEX_HEX)]
-Base64Field = Annotated[str, pydantic.Field(pattern=REGEX_BASE_64)]
+FieldHex = Annotated[
+    str,
+    pydantic.Field(
+        pattern=REGEX_HEX,
+        examples=["0x0"],
+    ),
+]
+FieldBase64 = Annotated[
+    str, pydantic.Field(pattern=REGEX_BASE_64, examples=["0x0"])
+]
 
 
 class NodeName(str, Enum):
@@ -20,9 +29,9 @@ class BlockTag(str, Enum):
 
 
 class CallRequest(pydantic.BaseModel):
-    contract_address: HexField
-    entry_point_selector: HexField
-    calldata: list[HexField] = []
+    contract_address: FieldHex
+    entry_point_selector: FieldHex
+    calldata: list[FieldHex] = []
 
 
 class TxType(str, Enum):
@@ -39,31 +48,126 @@ class TxVersion(int, Enum):
 
 
 class TxInvokeV0(pydantic.BaseModel):
-    type: TxType = TxType.INVOKE
-    mas_fee: HexField
-    version: TxVersion = TxVersion.V0
-    signature: list[HexField]
-    contract_address: HexField
-    entry_point_selector: HexField
-    calldata: list[HexField] = []
+    type: Annotated[
+        TxType,
+        pydantic.Field(
+            description=(
+                "The transaction type, will default to INVOKE for "
+                "invoke transactions. You should not pass any other value "
+                "than this"
+            )
+        ),
+    ] = TxType.INVOKE
+    max_fee: Annotated[
+        FieldHex,
+        pydantic.Field(
+            description=(
+                "The maximal fee that can be charged for including "
+                "the transaction"
+            )
+        ),
+    ]
+    version: Annotated[
+        TxVersion,
+        pydantic.Field(
+            description=(
+                "The transaction version, will default to V0. You "
+                "should not pass any other value than this."
+            )
+        ),
+    ] = TxVersion.V0
+    signature: Annotated[
+        FieldHex, pydantic.Field(description="A transaction signature")
+    ]
+    contract_address: Annotated[
+        FieldHex,
+        pydantic.Field(description="The contract used to invoke the function"),
+    ]
+    entry_point_selector: Annotated[
+        FieldHex,
+        pydantic.Field(description="Entry point used to call the function"),
+    ]
+    calldata: Annotated[
+        list[FieldHex],
+        pydantic.Field(
+            description=(
+                "The data expected by the account's `execute` function (in "
+                "most usecases, this includes the called contract address and "
+                "a function selector)"
+            )
+        ),
+    ]
 
-    model_config = {"json_schema_extra": {"deprecated": True}}
+    model_config = {
+        "json_schema_extra": {
+            "description": (
+                "describes what parts of the transaction should be executed"
+            ),
+            "deprecated": True,
+        }
+    }
 
 
 class TxInvokeV1(pydantic.BaseModel):
-    type: TxType = TxType.INVOKE
-    max_fee: HexField
-    version: TxVersion = TxVersion.V1
-    signature: list[HexField]
-    nonce: HexField
-    sender_address: HexField
-    entry_point_selector: HexField
-    calldata: list[HexField] = []
+    type: Annotated[
+        TxType,
+        pydantic.Field(
+            description=(
+                "The transaction type, will default to INVOKE for "
+                "invoke transactions. You should not pass any other value "
+                "than this"
+            )
+        ),
+    ] = TxType.INVOKE
+    sender_address: Annotated[
+        FieldHex,
+        pydantic.Field(
+            description=(
+                "The address of the account contract sending the invoke "
+                "transaction"
+            )
+        ),
+    ]
+    calldata: Annotated[
+        list[FieldHex],
+        pydantic.Field(
+            description=(
+                "The data expected by the account's `execute` function (in "
+                "most usecases, this includes the called contract address and "
+                "a function selector)"
+            )
+        ),
+    ]
+    max_fee: Annotated[
+        FieldHex,
+        pydantic.Field(
+            description=(
+                "The maximal fee that can be charged for including "
+                "the transaction"
+            )
+        ),
+    ]
+    version: Annotated[
+        TxVersion,
+        pydantic.Field(
+            description=(
+                "The transaction version, will default to V1. You "
+                "should not pass any other value than this."
+            )
+        ),
+    ] = TxVersion.V1
+    signature: Annotated[
+        FieldHex, pydantic.Field(description="A transaction signature")
+    ]
+    nonce: Annotated[
+        FieldHex,
+        pydantic.Field(description="Transaction nonce, avoids replay attacks"),
+    ]
 
 
 class ResourceBoundsGas(pydantic.BaseModel):
-    max_amount: HexField
-    max_price_per_unit: HexField
+    max_amount: FieldHex
+    max_price_per_unit: FieldHex
 
 
 class ResourceBounds(pydantic.BaseModel):
@@ -87,24 +191,8 @@ class TxInvokeV3(pydantic.BaseModel):
             )
         ),
     ] = TxType.INVOKE
-    version: Annotated[
-        TxVersion,
-        pydantic.Field(
-            description=(
-                "The transaction version, will default to V3. You "
-                "should not pass any other value than this."
-            )
-        ),
-    ] = TxVersion.V3
-    signature: Annotated[
-        list[HexField], pydantic.Field(description="A transaction signature")
-    ]
-    nonce: Annotated[
-        HexField,
-        pydantic.Field(description="Transaction nonce, avoids replay attacks"),
-    ]
     sender_address: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The address of the account contract sending the invoke "
@@ -113,7 +201,7 @@ class TxInvokeV3(pydantic.BaseModel):
         ),
     ]
     calldata: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "The data expected by the account's `execute` function (in "
@@ -121,7 +209,23 @@ class TxInvokeV3(pydantic.BaseModel):
                 "a function selector)"
             )
         ),
-    ] = []
+    ]
+    version: Annotated[
+        TxVersion,
+        pydantic.Field(
+            description=(
+                "The transaction version, will default to V3. You "
+                "should not pass any other value than this."
+            ),
+        ),
+    ] = TxVersion.V3
+    signature: Annotated[
+        list[FieldHex], pydantic.Field(description="A transaction signature")
+    ]
+    nonce: Annotated[
+        FieldHex,
+        pydantic.Field(description="Transaction nonce, avoids replay attacks"),
+    ]
     resource_bounds: Annotated[
         ResourceBounds,
         pydantic.Field(
@@ -132,7 +236,7 @@ class TxInvokeV3(pydantic.BaseModel):
         ),
     ]
     tip: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The tip for the transaction. A higher tip means your "
@@ -141,7 +245,7 @@ class TxInvokeV3(pydantic.BaseModel):
         ),
     ]
     paymaster_data: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "Data needed to allow the paymaster to pay for the "
@@ -150,7 +254,7 @@ class TxInvokeV3(pydantic.BaseModel):
         ),
     ]
     acount_deployment_data: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "data needed to deploy the account contract from "
@@ -180,14 +284,14 @@ class TxInvokeV3(pydantic.BaseModel):
 
 class CairoV1EntryPoint(pydantic.BaseModel):
     offset: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description="The offset of the entry point in the program",
             deprecated=True,
         ),
     ]
     selector: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "A unique identifier of the entry point (function) in "
@@ -200,7 +304,7 @@ class CairoV1EntryPoint(pydantic.BaseModel):
 
 class CairoV2EntryPoint(pydantic.BaseModel):
     selector: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "A unique identifier of the entry point (function) in the "
@@ -330,7 +434,7 @@ class CairoV1ABIEntryStruct(pydantic.BaseModel):
 
 class CairoV1ContractClass(pydantic.BaseModel):
     program: Annotated[
-        Base64Field,
+        FieldBase64,
         pydantic.Field(
             description="A base64 representation of the compressed program code"
         ),
@@ -365,7 +469,7 @@ class TxDeclareV1(pydantic.BaseModel):
         ),
     ] = TxType.DECLARE
     sender_address: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The address of the account contract sending the declaration "
@@ -374,7 +478,7 @@ class TxDeclareV1(pydantic.BaseModel):
         ),
     ]
     max_fee: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The maximal fee that can be charged for including "
@@ -392,10 +496,10 @@ class TxDeclareV1(pydantic.BaseModel):
         ),
     ] = TxVersion.V1
     signature: Annotated[
-        HexField, pydantic.Field(description="A transaction signature")
+        FieldHex, pydantic.Field(description="A transaction signature")
     ]
     nonce: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(description="Transaction nonce, avoids replay attacks"),
     ]
     contract_class: Annotated[
@@ -421,7 +525,7 @@ class CairoV2EntryPointsByType(pydantic.BaseModel):
 
 class CairoV2ContractClass(pydantic.BaseModel):
     sierra_program: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "The list of Sierra instructions of which the program "
@@ -470,7 +574,7 @@ class TxDeclareV2(pydantic.BaseModel):
         ),
     ] = TxType.DECLARE
     sender_address: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The address of the account contract sending the declaration "
@@ -479,7 +583,7 @@ class TxDeclareV2(pydantic.BaseModel):
         ),
     ]
     compiled_class_hash: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The hash of the Cairo assembly resulting from the Sierra"
@@ -487,7 +591,7 @@ class TxDeclareV2(pydantic.BaseModel):
         ),
     ]
     max_hash: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The maximal fee that can be charged for including the "
@@ -505,10 +609,10 @@ class TxDeclareV2(pydantic.BaseModel):
         ),
     ] = TxVersion.V2
     signature: Annotated[
-        HexField, pydantic.Field(description="A transaction signature")
+        FieldHex, pydantic.Field(description="A transaction signature")
     ]
     nonce: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(description="Transaction nonce, avoids replay attacks"),
     ]
     contract_class: Annotated[
@@ -529,7 +633,7 @@ class TxDeclareV3(pydantic.BaseModel):
         ),
     ] = TxType.DECLARE
     sender_address: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The address of the account contract sending the declaration "
@@ -538,7 +642,7 @@ class TxDeclareV3(pydantic.BaseModel):
         ),
     ]
     compiled_class_hash: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The hash of the Cairo assembly resulting from the Sierra"
@@ -555,10 +659,10 @@ class TxDeclareV3(pydantic.BaseModel):
         ),
     ] = TxVersion.V3
     signature: Annotated[
-        HexField, pydantic.Field(description="A transaction signature")
+        FieldHex, pydantic.Field(description="A transaction signature")
     ]
     nonce: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(description="Transaction nonce, avoids replay attacks"),
     ]
     contract_class: Annotated[
@@ -575,7 +679,7 @@ class TxDeclareV3(pydantic.BaseModel):
         ),
     ]
     tip: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The tip for the transaction. A higher tip means your "
@@ -584,7 +688,7 @@ class TxDeclareV3(pydantic.BaseModel):
         ),
     ]
     paymaster_data: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "Data needed to allow the paymaster to pay for the "
@@ -593,7 +697,7 @@ class TxDeclareV3(pydantic.BaseModel):
         ),
     ]
     acount_deployment_data: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "data needed to deploy the account contract from "
@@ -633,7 +737,7 @@ class TxDeployV1(pydantic.BaseModel):
         ),
     ] = TxType.DEPLOY_ACCOUNT
     max_fee: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The maximal fee that can be charged for including "
@@ -651,20 +755,20 @@ class TxDeployV1(pydantic.BaseModel):
         ),
     ] = TxVersion.V1
     signature: Annotated[
-        HexField, pydantic.Field(description="A transaction signature")
+        FieldHex, pydantic.Field(description="A transaction signature")
     ]
     nonce: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(description="Transaction nonce, avoids replay attacks"),
     ]
     contract_address_salt: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description="The salt for the address of the deployed contract"
         ),
     ]
     constructor_calldata: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "The parameters passed to the constructor, represented as "
@@ -673,7 +777,7 @@ class TxDeployV1(pydantic.BaseModel):
         ),
     ]
     class_hash: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=("The hash of the deployed contract's class")
         ),
@@ -710,20 +814,20 @@ class TxDeployV3(pydantic.BaseModel):
         ),
     ] = TxVersion.V3
     signature: Annotated[
-        HexField, pydantic.Field(description="A transaction signature")
+        FieldHex, pydantic.Field(description="A transaction signature")
     ]
     nonce: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(description="Transaction nonce, avoids replay attacks"),
     ]
     contract_address_salt: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description="The salt for the address of the deployed contract"
         ),
     ]
     constructor_calldata: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "The parameters passed to the constructor, represented as "
@@ -732,7 +836,7 @@ class TxDeployV3(pydantic.BaseModel):
         ),
     ]
     class_hash: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=("The hash of the deployed contract's class")
         ),
@@ -747,7 +851,7 @@ class TxDeployV3(pydantic.BaseModel):
         ),
     ]
     tip: Annotated[
-        HexField,
+        FieldHex,
         pydantic.Field(
             description=(
                 "The tip for the transaction. A higher tip means your "
@@ -756,7 +860,7 @@ class TxDeployV3(pydantic.BaseModel):
         ),
     ]
     paymaster_data: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "Data needed to allow the paymaster to pay for the "
@@ -765,7 +869,7 @@ class TxDeployV3(pydantic.BaseModel):
         ),
     ]
     acount_deployment_data: Annotated[
-        list[HexField],
+        list[FieldHex],
         pydantic.Field(
             description=(
                 "data needed to deploy the account contract from "
@@ -802,23 +906,82 @@ class TxDeployV3(pydantic.BaseModel):
     }
 
 
-class EstimeFeeRequest(pydantic.BaseModel):
-    request: Annotated[
-        list[
-            TxInvokeV0
-            | TxInvokeV1
-            | TxInvokeV3
-            | TxDeclareV1
-            | TxDeclareV2
-            | TxDeclareV3
-            | TxDeployV1
-            | TxDeployV3
-        ],
-        pydantic.Field(
-            description=(
-                "a sequence of transactions to estimate, running each "
-                "transaction on the state resulting from applying all the "
-                "previous ones"
-            ),
+class SimulationFlags(str, Enum):
+    SKIP_VALIDATE = "SKIP_VALIDATE"
+
+    model_config = {
+        "json_schema_extra": {
+            "description": (
+                "Flags that indicate how to simulate a given transaction. By "
+                "default, the sequencer behavior is replicated locally"
+            )
+        }
+    }
+
+
+def doc_tx_invoke_v1() -> dict[str, Any]:
+    tx = TxInvokeV1(
+        sender_address="0x0",
+        calldata=["0x0"],
+        max_fee="0x0",
+        signature="0x0",
+        nonce="0x0",
+    )
+
+    return tx.model_dump()
+
+
+TX = (
+    TxInvokeV0
+    | TxInvokeV1
+    | TxInvokeV3
+    | TxDeclareV1
+    | TxDeclareV2
+    | TxDeclareV3
+    | TxDeployV1
+    | TxDeployV3
+)
+
+
+QueryBlockHash = Annotated[
+    str | None,
+    fastapi.Query(
+        pattern=REGEX_HEX,
+        description="A block hash, represented as a field element",
+    ),
+]
+
+
+QueryBlockNumber = Annotated[
+    int | None, fastapi.Query(ge=0, description="A block number")
+]
+
+QueryBlockTag = Annotated[
+    BlockTag | None,
+    fastapi.Query(
+        description="A block tag, ca be either 'latest' to reference the last synchronized block, or 'pending' to reference the last unverified block to yet be added to the chain",
+    ),
+]
+
+
+BodyEstimateFeeRequest = Annotated[
+    TX,
+    fastapi.Body(
+        description=(
+            "a sequence of transactions to estimate, running each "
+            "transaction on the state resulting from applying all the "
+            "previous ones"
         ),
-    ]
+        examples=[doc_tx_invoke_v1()],
+    ),
+]
+
+
+BodyEstimateFeeSimulationFlags = Annotated[
+    list[SimulationFlags],
+    fastapi.Body(
+        description=(
+            "describes what parts of the transaction should be executed"
+        )
+    ),
+]

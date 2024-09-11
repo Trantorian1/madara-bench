@@ -402,7 +402,7 @@ async def starknet_getBlockTransactionCount(
         return container
 
 
-@app.post("/info/rpc/starknet_call/{node}")
+@app.post("/info/rpc/starknet_call/{node}", responses={**ERROR_CODES})
 async def starknet_call(
     node: models.NodeName,
     request: models.CallRequest,
@@ -424,14 +424,22 @@ async def starknet_call(
         return container
 
 
-@app.post("/info/rpc/starknet_estimeFee/{node}")
+@app.post("/info/rpc/starknet_estimeFee/{node}", responses={**ERROR_CODES})
 async def starknet_estimateFee(
-    node: models.NodeName,
-    request: models.EstimeFeeRequest,
-    block_hash: Annotated[
-        str | None, fastapi.Query(pattern=models.REGEX_HEX)
-    ] = None,
-    block_number: Annotated[int | None, fastapi.Query(ge=0)] = None,
-    block_tag: models.BlockTag | None = None,
+    node: Annotated[models.NodeName, fastapi.Path()],
+    request: models.BodyEstimateFeeRequest,
+    simulation_flags: models.BodyEstimateFeeSimulationFlags,
+    block_hash: models.QueryBlockHash = None,
+    block_number: models.QueryBlockNumber = None,
+    block_tag: models.QueryBlockTag = None,
 ):
-    pass
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_estimateFee(url, request, simulation_flags, block_id)
+    else:
+        return container

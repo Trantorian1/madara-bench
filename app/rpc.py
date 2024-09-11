@@ -1,4 +1,3 @@
-import json
 from typing import Any
 
 import requests
@@ -27,6 +26,7 @@ STARKNET_GET_CLASS_HASH_AT: str = "starknet_getClassHashAt"
 STARKNET_GET_CLASS_AT: str = "starknet_getClassAt"
 STARKNET_GET_BLOCK_TRANSACTION_COUNT: str = "starknet_getBlockTransactionCount"
 STARKNET_CALL: str = "starknet_call"
+STARKNET_ESTIMATE_FEE: str = "starknet_estimateFee"
 
 
 def json_rpc(
@@ -40,7 +40,9 @@ def json_rpc(
 
 
 def to_block_id(
-    block_hash: str | None, block_number: int | None, block_tag: models.BlockTag | None
+    block_hash: str | None,
+    block_number: int | None,
+    block_tag: models.BlockTag | None,
 ) -> str | dict[str, str] | dict[str, int] | ErrorBlockIdMissing:
     if isinstance(block_hash, str):
         return {"block_hash": block_hash}
@@ -68,7 +70,9 @@ def rpc_starknet_specVersion(url: str) -> dict[str, Any]:
 def rpc_starknet_getBlockWithTxHashes(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
-    return json_rpc(url, STARKNET_GET_BLOCK_WITH_TX_HASHES, {"block_id": block_id})
+    return json_rpc(
+        url, STARKNET_GET_BLOCK_WITH_TX_HASHES, {"block_id": block_id}
+    )
 
 
 def rpc_starknet_getBlockWithTxs(
@@ -80,7 +84,9 @@ def rpc_starknet_getBlockWithTxs(
 def rpc_starknet_getBlockWithReceipts(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> dict[str, Any]:
-    return json_rpc(url, STARKNET_GET_BLOCK_WITH_RECEIPTS, {"block_id": block_id})
+    return json_rpc(
+        url, STARKNET_GET_BLOCK_WITH_RECEIPTS, {"block_id": block_id}
+    )
 
 
 def rpc_starknet_getStateUpdate(
@@ -110,7 +116,9 @@ def rpc_starknet_getTransactionStatus(
     url: str, transaction_hash: str
 ) -> dict[str, Any]:
     return json_rpc(
-        url, STARKNET_GET_TRANSACTION_STATUS, {"transaction_hash": transaction_hash}
+        url,
+        STARKNET_GET_TRANSACTION_STATUS,
+        {"transaction_hash": transaction_hash},
     )
 
 
@@ -118,12 +126,16 @@ def rpc_starknet_getTransactionByHash(
     url: str, transaction_hash: str
 ) -> dict[str, Any]:
     return json_rpc(
-        url, STARKNET_GET_TRANSACTION_BY_HASH, {"transaction_hash": transaction_hash}
+        url,
+        STARKNET_GET_TRANSACTION_BY_HASH,
+        {"transaction_hash": transaction_hash},
     )
 
 
 def rpc_starknet_getTransactionByBlockIdAndIndex(
-    url: str, transaction_index: int, block_id: str | dict[str, str] | dict[str, int]
+    url: str,
+    transaction_index: int,
+    block_id: str | dict[str, str] | dict[str, int],
 ):
     return json_rpc(
         url,
@@ -134,7 +146,9 @@ def rpc_starknet_getTransactionByBlockIdAndIndex(
 
 def rpc_starknet_getTransactionReceipt(url: str, transaction_hash: str):
     return json_rpc(
-        url, STARKNET_GET_TRANSACTION_RECEIPT, {"transaction_hash": transaction_hash}
+        url,
+        STARKNET_GET_TRANSACTION_RECEIPT,
+        {"transaction_hash": transaction_hash},
     )
 
 
@@ -142,12 +156,16 @@ def rpc_starnet_getClass(
     url: str, class_hash: str, block_id: str | dict[str, str] | dict[str, int]
 ):
     return json_rpc(
-        url, STARKNET_GET_CLASS, {"block_id": block_id, "class_hash": class_hash}
+        url,
+        STARKNET_GET_CLASS,
+        {"block_id": block_id, "class_hash": class_hash},
     )
 
 
 def rpc_starknet_getClassHashAt(
-    url: str, contract_address: str, block_id: str | dict[str, str] | dict[str, int]
+    url: str,
+    contract_address: str,
+    block_id: str | dict[str, str] | dict[str, int],
 ):
     return json_rpc(
         url,
@@ -157,7 +175,9 @@ def rpc_starknet_getClassHashAt(
 
 
 def rpc_starknet_getClassAt(
-    url: str, contract_address: str, block_id: str | dict[str, str] | dict[str, int]
+    url: str,
+    contract_address: str,
+    block_id: str | dict[str, str] | dict[str, int],
 ):
     return json_rpc(
         url,
@@ -169,7 +189,9 @@ def rpc_starknet_getClassAt(
 def rpc_starknet_getBlockTransactionCount(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ):
-    return json_rpc(url, STARKNET_GET_BLOCK_TRANSACTION_COUNT, {"block_id": block_id})
+    return json_rpc(
+        url, STARKNET_GET_BLOCK_TRANSACTION_COUNT, {"block_id": block_id}
+    )
 
 
 def rpc_starknet_call(
@@ -179,4 +201,21 @@ def rpc_starknet_call(
 ):
     return json_rpc(
         url, STARKNET_CALL, {"request": vars(request), "block_id": block_id}
+    )
+
+
+def rpc_estimateFee(
+    url: str,
+    request: models.TX,
+    simulation_flags: list[models.SimulationFlags],
+    block_id: str | dict[str, str] | dict[str, int],
+):
+    return json_rpc(
+        url,
+        STARKNET_ESTIMATE_FEE,
+        {
+            "request": request,
+            "simulation_flags": simulation_flags,
+            "block_id": block_id,
+        },
     )
