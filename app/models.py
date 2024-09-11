@@ -517,9 +517,116 @@ class TxDeclareV2(pydantic.BaseModel):
     ]
 
 
+class TxDeclareV3(pydantic.BaseModel):
+    type: Annotated[
+        TxType,
+        pydantic.Field(
+            description=(
+                "The transaction type, will default to DECLARE for "
+                "declare transactions. You should not pass any other value "
+                "than this"
+            )
+        ),
+    ] = TxType.DECLARE
+    sender_address: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The address of the account contract sending the declaration "
+                "transaction"
+            )
+        ),
+    ]
+    compiled_class_hash: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The hash of the Cairo assembly resulting from the Sierra"
+            )
+        ),
+    ]
+    version: Annotated[
+        TxVersion,
+        pydantic.Field(
+            description=(
+                "The transaction version, will default to V3. You "
+                "should not pass any other value than this."
+            )
+        ),
+    ] = TxVersion.V3
+    signature: Annotated[
+        HexField, pydantic.Field(description="A transaction signature")
+    ]
+    contract_class: Annotated[
+        CairoV2ContractClass,
+        pydantic.Field(description="The class to be declared"),
+    ]
+    resource_bounds: Annotated[
+        ResourceBounds,
+        pydantic.Field(
+            description=(
+                "Resource bounds for the transaction execution, allow you to "
+                "specify a max gas price for l1 and l2"
+            )
+        ),
+    ]
+    tip: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The tip for the transaction. A higher tip means your "
+                "transaction should be processed faster."
+            )
+        ),
+    ]
+    paymaster_data: Annotated[
+        list[HexField],
+        pydantic.Field(
+            description=(
+                "Data needed to allow the paymaster to pay for the "
+                "transaction in native tokens"
+            )
+        ),
+    ]
+    acount_deployment_data: Annotated[
+        list[HexField],
+        pydantic.Field(
+            description=(
+                "data needed to deploy the account contract from "
+                "which this tx will be initiated"
+            )
+        ),
+    ]
+    nonce_data_availability_mode: Annotated[
+        DaMode,
+        pydantic.Field(
+            description=(
+                "The storage domain of the account's nonce (an account has a "
+                "nonce per DA mode)"
+            )
+        ),
+    ]
+    fee_data_availability_mode: Annotated[
+        DaMode,
+        pydantic.Field(
+            description=(
+                "The storage domain of the account's balance from "
+                "which fee will be charged"
+            )
+        ),
+    ]
+
+
 class EstimeFeeRequest(pydantic.BaseModel):
     schema_aliased: Annotated[
-        list[TxInvokeV0 | TxInvokeV1 | TxInvokeV3 | TxDeclareV1],
+        list[
+            TxInvokeV0
+            | TxInvokeV1
+            | TxInvokeV3
+            | TxDeclareV1
+            | TxDeclareV2
+            | TxDeclareV3
+        ],
         pydantic.Field(
             alias="schema",
             description="a sequence of transactions to estimate, running each transaction on the state resulting from applying all the previous ones",
