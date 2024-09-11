@@ -2,6 +2,8 @@ from typing import Any
 
 import fastapi
 
+from app.models.query import BlockId
+
 from .models import *
 
 TX = (
@@ -98,3 +100,50 @@ class _BodyEstimateMessageFee(pydantic.BaseModel):
 EstimateMessageFee = Annotated[
     _BodyEstimateMessageFee, fastapi.Body(include_in_schema=False)
 ]
+
+
+class _BodyGetEvents(pydantic.BaseModel):
+    from_block: Annotated[
+        BlockId,
+        pydantic.Field(description="Filter events from this block (inclusive)"),
+    ]
+    to_block: Annotated[
+        BlockId,
+        pydantic.Field(
+            description="Filter events up to this block (exclusive)"
+        ),
+    ]
+    address: Annotated[
+        FieldHex,
+        pydantic.Field(
+            description="On-chain address of the contract emitting the events"
+        ),
+    ]
+    keys: Annotated[
+        list[FieldHex],
+        pydantic.Field(
+            description=(
+                "Value used to filter events. Each key designate the possible "
+                "values to be matched for events to be returned. Empty array "
+                "designates 'any' value"
+            )
+        ),
+    ]
+    continuation_token: Annotated[
+        str,
+        pydantic.Field(
+            description=(
+                "The token returned from the previous query. If no token is "
+                "provided the first page is returned. In cases where "
+                "`chunk_size` is provided, this allows to keep looking for "
+                "events at the end of that chunk in the next query"
+            )
+        ),
+    ]
+    chunk_size: Annotated[
+        int,
+        pydantic.Field(ge=0, description="Maximum number of events to return"),
+    ]
+
+
+GetEvents = Annotated[_BodyGetEvents, fastapi.Body(include_in_schema=False)]

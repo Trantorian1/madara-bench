@@ -30,6 +30,7 @@ STARKNET_ESTIMATE_FEE: str = "starknet_estimateFee"
 STARKNET_ESTIMATE_MESSAGE_FEE: str = "starknet_estimateMessageFee"
 STARKNET_CHAIN_ID: str = "starknet_chainId"
 STARKNET_SYNCING: str = "starknet_syncing"
+STARKNET_GET_EVENTS: str = "starknet_getEvents"
 
 
 def json_rpc(
@@ -249,3 +250,7 @@ def rpc_chainId(url: str) -> dict[str, Any]:
 
 def rpc_syncing(url: str) -> dict[str, Any]:
     return json_rpc(url, STARKNET_SYNCING)
+
+
+def rcp_getEvents(url: str, body: models.body.GetEvents) -> dict[str, Any]:
+    return json_rpc(url, STARKNET_GET_EVENTS, {"filter": body})

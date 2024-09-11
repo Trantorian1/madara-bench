@@ -58,3 +58,5 @@ ClassHash = Annotated[
     str,
     fastapi.Query(pattern=REGEX_HEX, description="Address of a class on-chain"),
 ]
+
+BlockId = BlockHash | BlockNumber | BlockTag

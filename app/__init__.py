@@ -462,3 +462,16 @@ async def starknet_syncing(node: Annotated[models.NodeName, fastapi.Path()]):
         return rpc.rpc_syncing(url)
     else:
         return container
+
+
+@app.post("/info/rpc/starknet_getEvents/{node}", responses={**ERROR_CODES})
+async def starknet_getEvents(
+    node: Annotated[models.NodeName, fastapi.Path()],
+    body: models.body.GetEvents,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rcp_getEvents(url, body)
+    else:
+        return container
