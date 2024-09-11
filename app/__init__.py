@@ -112,6 +112,9 @@ async def docker_get_ports(node: models.NodeName):
         return container
 
 
+# TODO: order this alphabetically
+
+
 @app.get("/info/rpc/starknet_specVersion/{node}", responses={**ERROR_CODES})
 async def starknet_specVersion(node: models.NodeName):
     container = stats.container_get(node)
@@ -586,5 +589,20 @@ async def starknet_addDeployAccountTransaction(
         return rpc.rpc_starknet_addDeplyAccountTransaction(
             url, deploy_account_transaction
         )
+    else:
+        return container
+
+
+@app.post(
+    "/info/rpc/starknet_addInvokeTransaction/{node}/",
+    responses={**ERROR_CODES},
+)
+async def starknet_addInvokeTransaction(
+    node: models.NodeName, invoke_transaction: models.body.TxInvoke
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknetAddInvokeTransaction(url, invoke_transaction)
     else:
         return container
