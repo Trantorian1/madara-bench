@@ -557,6 +557,10 @@ class TxDeclareV3(pydantic.BaseModel):
     signature: Annotated[
         HexField, pydantic.Field(description="A transaction signature")
     ]
+    nonce: Annotated[
+        HexField,
+        pydantic.Field(description="Transaction nonce, avoids replay attacks"),
+    ]
     contract_class: Annotated[
         CairoV2ContractClass,
         pydantic.Field(description="The class to be declared"),
@@ -617,6 +621,65 @@ class TxDeclareV3(pydantic.BaseModel):
     ]
 
 
+class TxDeployV1(pydantic.BaseModel):
+    type: Annotated[
+        TxType,
+        pydantic.Field(
+            description=(
+                "The transaction type, will default to DEPLOY_ACCOUNT for "
+                "deploy transactions. You should not pass any other value "
+                "than this"
+            )
+        ),
+    ] = TxType.DEPLOY_ACCOUNT
+    max_fee: Annotated[
+        HexField,
+        pydantic.Field(
+            description=(
+                "The maximal fee that can be charged for including "
+                "the transaction"
+            )
+        ),
+    ]
+    version: Annotated[
+        TxVersion,
+        pydantic.Field(
+            description=(
+                "The transaction version, will default to V1. You "
+                "should not pass any other value than this."
+            )
+        ),
+    ] = TxVersion.V1
+    signature: Annotated[
+        HexField, pydantic.Field(description="A transaction signature")
+    ]
+    nonce: Annotated[
+        HexField,
+        pydantic.Field(description="Transaction nonce, avoids replay attacks"),
+    ]
+    contract_address_salt: Annotated[
+        HexField,
+        pydantic.Field(
+            description="The salt for the address of the deployed contract"
+        ),
+    ]
+    constructor_calldata: Annotated[
+        list[HexField],
+        pydantic.Field(
+            description=(
+                "The parameters passed to the constructor, represented as "
+                "field elements"
+            )
+        ),
+    ]
+    class_hash: Annotated[
+        HexField,
+        pydantic.Field(
+            description=("The hash of the deployed contract's class")
+        ),
+    ]
+
+
 class EstimeFeeRequest(pydantic.BaseModel):
     schema_aliased: Annotated[
         list[
@@ -626,6 +689,7 @@ class EstimeFeeRequest(pydantic.BaseModel):
             | TxDeclareV1
             | TxDeclareV2
             | TxDeclareV3
+            | TxDeployV1
         ],
         pydantic.Field(
             alias="schema",
