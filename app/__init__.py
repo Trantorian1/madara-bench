@@ -571,3 +571,20 @@ async def starknet_addDeclareTransaction(
         return rpc.rpc_starknet_addDeclareTransaction(url, declare_transaction)
     else:
         return container
+
+
+@app.post(
+    "/info/rpc/starknet_addDeployAccountTransaction/{node}/",
+    responses={**ERROR_CODES},
+)
+async def starknet_addDeployAccountTransaction(
+    node: models.NodeName, deploy_account_transaction: models.body.TxDeploy
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_addDeplyAccountTransaction(
+            url, deploy_account_transaction
+        )
+    else:
+        return container

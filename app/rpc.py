@@ -40,6 +40,9 @@ STARKNET_TRACE_TRANSACTION: str = "starknet_traceTransaction"
 
 # ADD API
 STARKNET_ADD_DECLARE_TRANSACTION: str = "starknet_addDeclareTransaction"
+STARKNET_ADD_DEPLOY_ACCOUNT_TRANSACTION: str = (
+    "starknet_addDeployAccountTransaction"
+)
 
 
 def json_rpc(
@@ -321,4 +324,14 @@ def rpc_starknet_addDeclareTransaction(
         url,
         STARKNET_ADD_DECLARE_TRANSACTION,
         {"declare_transaction": declare_transaction},
+    )
+
+
+def rpc_starknet_addDeplyAccountTransaction(
+    url: str, deploy_account_transaction: models.body.TxDeploy
+) -> dict[str, Any]:
+    return json_rpc(
+        url,
+        STARKNET_ADD_DEPLOY_ACCOUNT_TRANSACTION,
+        {"deploy_account_transaction": deploy_account_transaction},
     )
