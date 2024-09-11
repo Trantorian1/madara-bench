@@ -29,6 +29,7 @@ STARKNET_CALL: str = "starknet_call"
 STARKNET_ESTIMATE_FEE: str = "starknet_estimateFee"
 STARKNET_ESTIMATE_MESSAGE_FEE: str = "starknet_estimateMessageFee"
 STARKNET_CHAIN_ID: str = "starknet_chainId"
+STARKNET_SYNCING: str = "starknet_syncing"
 
 
 def json_rpc(
@@ -244,3 +245,7 @@ def rpc_estimateMessageFee(
 
 def rpc_chainId(url: str) -> dict[str, Any]:
     return json_rpc(url, STARKNET_CHAIN_ID)
+
+
+def rpc_syncing(url: str) -> dict[str, Any]:
+    return json_rpc(url, STARKNET_SYNCING)

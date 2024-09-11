@@ -452,3 +452,13 @@ async def starknet_chainId(node: Annotated[models.NodeName, fastapi.Path()]):
         return rpc.rpc_chainId(url)
     else:
         return container
+
+
+@app.get("/info/rpc/starknet_syncing/{node}", responses={**ERROR_CODES})
+async def starknet_syncing(node: Annotated[models.NodeName, fastapi.Path()]):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_syncing(url)
+    else:
+        return container
