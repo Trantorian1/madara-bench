@@ -518,3 +518,25 @@ async def starknet_simulateTransactions(
             return rpc.rpc_starknet_simulateTransactions(url, body, block_id)
     else:
         return container
+
+
+@app.post(
+    "/info/rpc/starknet_traceBlockTransactions/{node}/",
+    responses={**ERROR_CODES},
+)
+async def starknet_traceBlockTransactions(
+    node: models.NodeName,
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.QueryBlockTag = None,
+):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+        if isinstance(block_id, error.ErrorBlockIdMissing):
+            return block_id
+        else:
+            return rpc.rpc_starknet_traceBlockTransactions(url, block_id)
+    else:
+        return container
