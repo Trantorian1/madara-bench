@@ -1,7 +1,6 @@
 from enum import Enum
-from typing import Annotated, Any
+from typing import Annotated
 
-import fastapi
 import pydantic
 
 REGEX_HEX: str = "^0x[a-fA-F0-9]+$"
@@ -26,12 +25,6 @@ class NodeName(str, Enum):
 class BlockTag(str, Enum):
     latest = "latest"
     pending = "pending"
-
-
-class CallRequest(pydantic.BaseModel):
-    contract_address: FieldHex
-    entry_point_selector: FieldHex
-    calldata: list[FieldHex] = []
 
 
 class TxType(str, Enum):
@@ -917,71 +910,3 @@ class SimulationFlags(str, Enum):
             )
         }
     }
-
-
-def doc_tx_invoke_v1() -> dict[str, Any]:
-    tx = TxInvokeV1(
-        sender_address="0x0",
-        calldata=["0x0"],
-        max_fee="0x0",
-        signature="0x0",
-        nonce="0x0",
-    )
-
-    return tx.model_dump()
-
-
-TX = (
-    TxInvokeV0
-    | TxInvokeV1
-    | TxInvokeV3
-    | TxDeclareV1
-    | TxDeclareV2
-    | TxDeclareV3
-    | TxDeployV1
-    | TxDeployV3
-)
-
-
-QueryBlockHash = Annotated[
-    str | None,
-    fastapi.Query(
-        pattern=REGEX_HEX,
-        description="A block hash, represented as a field element",
-    ),
-]
-
-
-QueryBlockNumber = Annotated[
-    int | None, fastapi.Query(ge=0, description="A block number")
-]
-
-QueryBlockTag = Annotated[
-    BlockTag | None,
-    fastapi.Query(
-        description="A block tag, ca be either 'latest' to reference the last synchronized block, or 'pending' to reference the last unverified block to yet be added to the chain",
-    ),
-]
-
-
-BodyEstimateFeeRequest = Annotated[
-    TX,
-    fastapi.Body(
-        description=(
-            "a sequence of transactions to estimate, running each "
-            "transaction on the state resulting from applying all the "
-            "previous ones"
-        ),
-        examples=[doc_tx_invoke_v1()],
-    ),
-]
-
-
-BodyEstimateFeeSimulationFlags = Annotated[
-    list[SimulationFlags],
-    fastapi.Body(
-        description=(
-            "describes what parts of the transaction should be executed"
-        )
-    ),
-]

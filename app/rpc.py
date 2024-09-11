@@ -196,7 +196,7 @@ def rpc_starknet_getBlockTransactionCount(
 
 def rpc_starknet_call(
     url: str,
-    request: models.CallRequest,
+    request: models.body.Call,
     block_id: str | dict[str, str] | dict[str, int],
 ):
     return json_rpc(
@@ -206,16 +206,15 @@ def rpc_starknet_call(
 
 def rpc_estimateFee(
     url: str,
-    request: models.TX,
-    simulation_flags: list[models.SimulationFlags],
+    body: models.body.EstimateFee,
     block_id: str | dict[str, str] | dict[str, int],
 ):
     return json_rpc(
         url,
         STARKNET_ESTIMATE_FEE,
         {
-            "request": request,
-            "simulation_flags": simulation_flags,
+            "request": body.request,
+            "simulation_flags": body.simulation_flags,
             "block_id": block_id,
         },
     )
