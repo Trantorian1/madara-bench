@@ -19,12 +19,12 @@ ERROR_CODES: dict[int, dict[str, Any]] = {
         "description": "The node could not be found",
         "model": error.ErrorMessage,
     },
-    fastapi.status.HTTP_409_CONFLICT: {
-        "description": "Node exists but did not respond",
+    fastapi.status.HTTP_417_EXPECTATION_FAILED: {
+        "description": "Node exists but is not running",
         "model": error.ErrorMessage,
     },
-    fastapi.status.HTTP_410_GONE: {
-        "description": "Node exists but is not running",
+    fastapi.status.HTTP_424_FAILED_DEPENDENCY: {
+        "description": "Node exists but did not respond",
         "model": error.ErrorMessage,
     },
 }
@@ -56,10 +56,7 @@ async def node_get_cpu_normalized(node: models.NodeName):
     """
 
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        return stats.stats_cpu_normalized(node, container)
-    else:
-        return container
+    return stats.stats_cpu_normalized(node, container)
 
 
 @app.get(
@@ -73,10 +70,7 @@ async def node_get_cpu_system(node: models.NodeName):
     """
 
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        return stats.stats_cpu_system(node, container)
-    else:
-        return container
+    return stats.stats_cpu_system(node, container)
 
 
 @app.get("/bench/memory/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
@@ -87,10 +81,7 @@ async def node_get_memory(node: models.NodeName):
     """
 
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        return stats.stats_memory(node, container)
-    else:
-        return container
+    return stats.stats_memory(node, container)
 
 
 @app.get("/bench/storage/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
@@ -102,10 +93,7 @@ async def node_get_storage(node: models.NodeName):
     """
 
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        return stats.stats_storage(node, container)
-    else:
-        return container
+    return stats.stats_storage(node, container)
 
 
 # =========================================================================== #
@@ -120,11 +108,8 @@ async def node_get_storage(node: models.NodeName):
 )
 async def starknet_blockHashAndNumber(node: models.NodeName):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_blockHashAndNumber(url)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_blockHashAndNumber(url)
 
 
 @app.get(
@@ -134,11 +119,8 @@ async def starknet_blockHashAndNumber(node: models.NodeName):
 )
 async def starknet_blockNumber(node: models.NodeName):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_blockNumber(url)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_blockNumber(url)
 
 
 @app.post(
@@ -154,15 +136,9 @@ async def starknet_call(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_call(url, request, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+    return rpc.rpc_starknet_call(url, request, block_id)
 
 
 @app.get(
@@ -172,11 +148,8 @@ async def starknet_call(
 )
 async def starknet_chainId(node: models.NodeName):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_chainId(url)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_chainId(url)
 
 
 @app.post(
@@ -192,15 +165,9 @@ async def starknet_estimateFee(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_estimateFee(url, body, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+    return rpc.rpc_starknet_estimateFee(url, body, block_id)
 
 
 @app.post(
@@ -216,15 +183,9 @@ async def starknet_estimateMessageFee(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_estimateMessageFee(url, body, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+    return rpc.rpc_starknet_estimateMessageFee(url, body, block_id)
 
 
 @app.get(
@@ -239,15 +200,10 @@ async def starknet_getBlockTransactionCount(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getBlockTransactionCount(url, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getBlockTransactionCount(url, block_id)
 
 
 @app.get(
@@ -262,15 +218,10 @@ async def starknet_getBlockWithReceipts(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getBlockWithReceipts(url, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getBlockWithReceipts(url, block_id)
 
 
 @app.get(
@@ -285,15 +236,10 @@ async def starknet_getBlockWithTxHashes(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getBlockWithTxHashes(url, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getBlockWithTxHashes(url, block_id)
 
 
 @app.get(
@@ -308,15 +254,10 @@ async def starknet_getBlockWithTxs(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getBlockWithTxs(url, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getBlockWithTxs(url, block_id)
 
 
 @app.get(
@@ -332,15 +273,10 @@ async def starknet_getClass(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starnet_getClass(url, class_hash, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starnet_getClass(url, class_hash, block_id)
 
 
 @app.get(
@@ -356,15 +292,10 @@ async def starknet_getClassAt(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getClassAt(url, contract_address, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getClassAt(url, contract_address, block_id)
 
 
 @app.get(
@@ -380,17 +311,10 @@ async def starknet_getClassHashAt(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getClassHashAt(
-                url, contract_address, block_id
-            )
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getClassHashAt(url, contract_address, block_id)
 
 
 @app.post(
@@ -403,11 +327,8 @@ async def starknet_getEvents(
     body: models.body.GetEvents,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rcp_starknet_getEvents(url, body)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rcp_starknet_getEvents(url, body)
 
 
 @app.get(
@@ -423,15 +344,10 @@ async def starknet_getNonce(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getNonce(url, contract_address, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getNonce(url, contract_address, block_id)
 
 
 @app.get(
@@ -446,15 +362,10 @@ async def starknet_getStateUpdate(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getStateUpdate(url, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getStateUpdate(url, block_id)
 
 
 @app.get(
@@ -471,17 +382,12 @@ async def starknet_getStorageAt(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getStorageAt(
-                url, contract_address, contract_key, block_id
-            )
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getStorageAt(
+        url, contract_address, contract_key, block_id
+    )
 
 
 @app.get(
@@ -497,17 +403,12 @@ async def starknet_getTransactionByBlockIdAndIndex(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
-                url, transaction_index, block_id
-            )
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_getTransactionByBlockIdAndIndex(
+        url, transaction_index, block_id
+    )
 
 
 @app.get(
@@ -520,11 +421,8 @@ async def starknet_getTransactionByHash(
     transaction_hash: models.query.TxHash,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getTransactionByHash(url, transaction_hash)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_getTransactionByHash(url, transaction_hash)
 
 
 @app.get(
@@ -537,11 +435,8 @@ async def starknet_getTransactionReceipt(
     transaction_hash: models.query.TxHash,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getTransactionReceipt(url, transaction_hash)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_getTransactionReceipt(url, transaction_hash)
 
 
 @app.get(
@@ -554,11 +449,8 @@ async def starknet_getTransactionStatus(
     transaction_hash: models.query.TxHash,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_getTransactionStatus(url, transaction_hash)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_getTransactionStatus(url, transaction_hash)
 
 
 @app.get(
@@ -568,11 +460,8 @@ async def starknet_getTransactionStatus(
 )
 async def starknet_specVersion(node: models.NodeName):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_specVersion(url)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_specVersion(url)
 
 
 @app.get(
@@ -582,11 +471,8 @@ async def starknet_specVersion(node: models.NodeName):
 )
 async def starknet_syncing(node: models.NodeName):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_syncing(url)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_syncing(url)
 
 
 # =========================================================================== #
@@ -607,15 +493,10 @@ async def starknet_simulateTransactions(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_simulateTransactions(url, body, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_simulateTransactions(url, body, block_id)
 
 
 @app.post(
@@ -630,15 +511,10 @@ async def starknet_traceBlockTransactions(
     block_tag: models.query.QueryBlockTag = None,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-        if isinstance(block_id, error.ErrorBlockIdMissing):
-            return block_id
-        else:
-            return rpc.rpc_starknet_traceBlockTransactions(url, block_id)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
+
+    return rpc.rpc_starknet_traceBlockTransactions(url, block_id)
 
 
 @app.post(
@@ -651,11 +527,8 @@ async def starknet_traceTransaction(
     transaction_hash: models.query.TxHash,
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_traceTransaction(url, transaction_hash)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_traceTransaction(url, transaction_hash)
 
 
 # =========================================================================== #
@@ -672,11 +545,8 @@ async def starknet_addDeclareTransaction(
     node: models.NodeName, declare_transaction: models.body.TxDeclare
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_addDeclareTransaction(url, declare_transaction)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_addDeclareTransaction(url, declare_transaction)
 
 
 @app.post(
@@ -688,13 +558,10 @@ async def starknet_addDeployAccountTransaction(
     node: models.NodeName, deploy_account_transaction: models.body.TxDeploy
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_addDeployAccountTransaction(
-            url, deploy_account_transaction
-        )
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknet_addDeployAccountTransaction(
+        url, deploy_account_transaction
+    )
 
 
 @app.post(
@@ -706,11 +573,8 @@ async def starknet_addInvokeTransaction(
     node: models.NodeName, invoke_transaction: models.body.TxInvoke
 ):
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknetAddInvokeTransaction(url, invoke_transaction)
-    else:
-        return container
+    url = rpc.rpc_url(node, container)
+    return rpc.rpc_starknetAddInvokeTransaction(url, invoke_transaction)
 
 
 # =========================================================================== #
@@ -732,7 +596,4 @@ async def docker_get_ports(node: models.NodeName):
     """List all the ports exposed by a node's container"""
 
     container = stats.container_get(node)
-    if isinstance(container, Container):
-        return container.ports
-    else:
-        return container
+    return container.ports
