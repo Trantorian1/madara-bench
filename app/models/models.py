@@ -54,7 +54,8 @@ class ResponseModelJSON(pydantic.BaseModel):
         str, pydantic.Field(description="JSON RPC method being called")
     ]
     when: Annotated[
-        datetime.datetime, pydantic.Field(description="Call issuing time")
+        datetime.datetime,
+        pydantic.Field(description="Call issuing time, in nanoseconds"),
     ]
     elapsed: Annotated[
         int, pydantic.Field(description="Call response delay, in nanoseconds")

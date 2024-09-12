@@ -103,7 +103,9 @@ async def node_get_storage(
     responses={**ERROR_CODES},
     tags=[TAG_READ],
 )
-async def starknet_blockHashAndNumber(node: models.NodeName):
+async def starknet_blockHashAndNumber(
+    node: models.NodeName,
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_blockHashAndNumber(url)
@@ -114,7 +116,9 @@ async def starknet_blockHashAndNumber(node: models.NodeName):
     responses={**ERROR_CODES},
     tags=[TAG_READ],
 )
-async def starknet_blockNumber(node: models.NodeName):
+async def starknet_blockNumber(
+    node: models.NodeName,
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_blockNumber(url)
@@ -131,7 +135,7 @@ async def starknet_call(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -143,7 +147,7 @@ async def starknet_call(
     responses={**ERROR_CODES},
     tags=[TAG_READ],
 )
-async def starknet_chainId(node: models.NodeName):
+async def starknet_chainId(node: models.NodeName) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_chainId(url)
@@ -160,7 +164,7 @@ async def starknet_estimateFee(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -178,7 +182,7 @@ async def starknet_estimateMessageFee(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -195,7 +199,7 @@ async def starknet_getBlockTransactionCount(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -213,7 +217,7 @@ async def starknet_getBlockWithReceipts(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -231,7 +235,7 @@ async def starknet_getBlockWithTxHashes(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -249,7 +253,7 @@ async def starknet_getBlockWithTxs(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -268,7 +272,7 @@ async def starknet_getClass(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -287,7 +291,7 @@ async def starknet_getClassAt(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -306,7 +310,7 @@ async def starknet_getClassHashAt(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -322,7 +326,7 @@ async def starknet_getClassHashAt(
 async def starknet_getEvents(
     node: models.NodeName,
     body: models.body.GetEvents,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rcp_starknet_getEvents(url, body)
@@ -339,7 +343,7 @@ async def starknet_getNonce(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -357,7 +361,7 @@ async def starknet_getStateUpdate(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -377,7 +381,7 @@ async def starknet_getStorageAt(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -398,7 +402,7 @@ async def starknet_getTransactionByBlockIdAndIndex(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -416,7 +420,7 @@ async def starknet_getTransactionByBlockIdAndIndex(
 async def starknet_getTransactionByHash(
     node: models.NodeName,
     transaction_hash: models.query.TxHash,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_getTransactionByHash(url, transaction_hash)
@@ -430,7 +434,7 @@ async def starknet_getTransactionByHash(
 async def starknet_getTransactionReceipt(
     node: models.NodeName,
     transaction_hash: models.query.TxHash,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_getTransactionReceipt(url, transaction_hash)
@@ -444,7 +448,7 @@ async def starknet_getTransactionReceipt(
 async def starknet_getTransactionStatus(
     node: models.NodeName,
     transaction_hash: models.query.TxHash,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_getTransactionStatus(url, transaction_hash)
@@ -455,7 +459,9 @@ async def starknet_getTransactionStatus(
     responses={**ERROR_CODES},
     tags=[TAG_READ],
 )
-async def starknet_specVersion(node: models.NodeName):
+async def starknet_specVersion(
+    node: models.NodeName,
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_specVersion(url)
@@ -466,7 +472,7 @@ async def starknet_specVersion(node: models.NodeName):
     responses={**ERROR_CODES},
     tags=[TAG_TRACE],
 )
-async def starknet_syncing(node: models.NodeName):
+async def starknet_syncing(node: models.NodeName) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_syncing(url)
@@ -488,7 +494,7 @@ async def starknet_simulateTransactions(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -506,7 +512,7 @@ async def starknet_traceBlockTransactions(
     block_hash: models.query.BlockHash = None,
     block_number: models.query.BlockNumber = None,
     block_tag: models.query.QueryBlockTag = None,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
@@ -522,7 +528,7 @@ async def starknet_traceBlockTransactions(
 async def starknet_traceTransaction(
     node: models.NodeName,
     transaction_hash: models.query.TxHash,
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_traceTransaction(url, transaction_hash)
@@ -540,7 +546,7 @@ async def starknet_traceTransaction(
 )
 async def starknet_addDeclareTransaction(
     node: models.NodeName, declare_transaction: models.body.TxDeclare
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_addDeclareTransaction(url, declare_transaction)
@@ -553,7 +559,7 @@ async def starknet_addDeclareTransaction(
 )
 async def starknet_addDeployAccountTransaction(
     node: models.NodeName, deploy_account_transaction: models.body.TxDeploy
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknet_addDeployAccountTransaction(
@@ -568,7 +574,7 @@ async def starknet_addDeployAccountTransaction(
 )
 async def starknet_addInvokeTransaction(
     node: models.NodeName, invoke_transaction: models.body.TxInvoke
-):
+) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
     return rpc.rpc_starknetAddInvokeTransaction(url, invoke_transaction)
