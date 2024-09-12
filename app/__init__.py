@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import Any
 
@@ -7,7 +6,7 @@ import fastapi
 import requests
 from docker import errors as docker_errors
 
-from app import error, models, rpc, stats
+from app import benchmarks, error, models, rpc, stats
 
 MADARA: str = "madara_runner"
 MADARA_DB: str = "madara_runner_db"
@@ -122,6 +121,24 @@ async def node_get_storage(
 
     container = stats.container_get(node)
     return stats.stats_storage(node, container)
+
+
+@app.get("/bench/rpc/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
+async def benchmark_rpc(
+    rpc_call: rpc.RpcCall,
+    samples: models.query.TestSamples = 10,
+    interval: models.query.TestInterval = 100,
+):
+    # containers = [(node, stats.container_get(node)) for node in models.NodeName]
+    # urls = [rpc.rpc_url(node, container) for (node, container) in containers]
+
+    containers = [
+        (node, stats.container_get(node))
+        for node in [models.NodeName.MADARA, models.NodeName.MADARA]
+    ]
+    urls = [rpc.rpc_url(node, container) for (node, container) in containers]
+
+    return await benchmarks.benchmark(urls, rpc_call, samples, interval)
 
 
 # =========================================================================== #
@@ -289,7 +306,7 @@ async def starknet_getBlockWithTxs(
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
 
-    return rpc.rpc_starknet_getBlockWithTxs(url, block_id)
+    return await rpc.rpc_starknet_getBlockWithTxs(url, block_id)
 
 
 @app.get(

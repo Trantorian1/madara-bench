@@ -70,4 +70,26 @@ ClassHash = Annotated[
     fastapi.Query(pattern=REGEX_HEX, description="Address of a class on-chain"),
 ]
 
+TestSamples = Annotated[
+    int,
+    fastapi.Query(
+        ge=1,
+        le=100,
+        description=(
+            "Number of sample to take, more samples means a higher "
+            "benchmarking precision at the cost of speed"
+        ),
+    ),
+]
+
+TestInterval = Annotated[
+    int,
+    fastapi.Query(
+        ge=0,
+        le=100,
+        description=("Interval between subsequent tests, in milliseconds"),
+    ),
+]
+
+
 BlockId = BlockHash | BlockNumber | BlockTag

@@ -44,6 +44,33 @@ class ResponseModelStats(GenericModel, Generic[T]):
     value: Annotated[T, pydantic.Field(description="System measurement result")]
 
 
+class ResponseModelBench(pydantic.BaseModel):
+    """Holds benchmarking indetifying data and average response time. This is
+    used to store the results of several tests, averaged over multiple samples
+
+    `time_start` is kept as a way to sort measurements or discriminate test if
+    the starting time between tests is too large. This could be the case in the
+    event of high load
+    """
+
+    node: NodeName
+    method: Annotated[
+        str, pydantic.Field(description="JSON RPC method being tested")
+    ]
+    when: Annotated[
+        datetime.datetime,
+        pydantic.Field(description="Test start time"),
+    ]
+    elapsed_avg: Annotated[
+        int,
+        pydantic.Field(
+            description=(
+                "Average method latency over all samples, in nanoseconds"
+            )
+        ),
+    ]
+
+
 class ResponseModelJSON(pydantic.BaseModel):
     """Holds JSON RPC call identifying data and execution time. This is used to
     store data resulting from a JSON RPC call for use in benchmarking
@@ -55,7 +82,7 @@ class ResponseModelJSON(pydantic.BaseModel):
     ]
     when: Annotated[
         datetime.datetime,
-        pydantic.Field(description="Call issuing time, in nanoseconds"),
+        pydantic.Field(description="Call issuing time"),
     ]
     elapsed: Annotated[
         int, pydantic.Field(description="Call response delay, in nanoseconds")
