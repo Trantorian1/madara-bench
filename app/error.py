@@ -1,12 +1,13 @@
 import fastapi
 import pydantic
+import requests
 from docker.models.containers import Container
 
 from app import models
 
 
 class ErrorMessage(pydantic.BaseModel):
-    message: str
+    detail: str
 
 
 class ErrorBlockIdMissing(fastapi.HTTPException):
@@ -39,6 +40,23 @@ class ErrorNodeNotRunning(fastapi.HTTPException):
             status_code=fastapi.status.HTTP_417_EXPECTATION_FAILED,
             detail=(
                 f"{node.name.capitalize()} node container is no longer running",
+            ),
+        )
+
+
+class ErrorJsonDecode(fastapi.HTTPException):
+    def __init__(
+        self,
+        node: models.NodeName,
+        api_call: str,
+        json_error: requests.exceptions.JSONDecodeError,
+    ) -> None:
+        super().__init__(
+            status_code=fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Failed to deserialize JSON response from "
+                f"{node.capitalize()} node after '{api_call}' api call"
+                f"{json_error}"
             ),
         )
 

@@ -1,7 +1,6 @@
 import datetime
 
 import docker
-from docker import errors as docker_errors
 from docker.models.containers import Container
 
 from app import error, models
@@ -10,14 +9,8 @@ from app import error, models
 def container_get(
     node: models.NodeName,
 ) -> Container:
-    try:
-        client = docker.client.from_env()
-        return client.containers.get(node + "_runner")
-
-    except docker_errors.NotFound:
-        raise error.ErrorNodeNotFound(node)
-    except docker_errors.APIError:
-        raise error.ErrorNodeSilent(node)
+    client = docker.client.from_env()
+    return client.containers.get(node + "_runner")
 
 
 # As explained in https://github.com/moby/moby/issues/26711
@@ -27,11 +20,7 @@ def stats_cpu_normalized(
     error.container_check_running(node, container)
 
     time_start = datetime.datetime.now()
-
-    try:
-        stats = container.stats(stream=False)
-    except docker_errors.APIError:
-        raise error.ErrorNodeSilent(node)
+    stats = container.stats(stream=False)
 
     cpu_delta: int = (
         stats["cpu_stats"]["cpu_usage"]["total_usage"]
@@ -60,11 +49,7 @@ def stats_cpu_system(
     error.container_check_running(node, container)
 
     time_start = datetime.datetime.now()
-
-    try:
-        stats = container.stats(stream=False)
-    except docker_errors.APIError:
-        raise error.ErrorNodeSilent(node)
+    stats = container.stats(stream=False)
 
     cpu_delta: int = (
         stats["cpu_stats"]["cpu_usage"]["total_usage"]
@@ -92,11 +77,7 @@ def stats_memory(
     error.container_check_running(node, container)
 
     time_start = datetime.datetime.now()
-
-    try:
-        stats = container.stats(stream=False)
-    except docker_errors.APIError:
-        raise error.ErrorNodeSilent(node)
+    stats = container.stats(stream=False)
 
     memory_usage = stats["memory_stats"]["usage"]
     return models.ResponseModelStats(
@@ -110,11 +91,7 @@ def stats_storage(
     error.container_check_running(node, container)
 
     time_start = datetime.datetime.now()
-
-    try:
-        result = container.exec_run(["du", "-sb", "/data"])
-    except docker_errors.APIError:
-        raise error.ErrorNodeSilent(node)
+    result = container.exec_run(["du", "-sb", "/data"])
 
     stdin: str = result.output.decode("utf8")
     test = stdin.removesuffix("\t/data\n")

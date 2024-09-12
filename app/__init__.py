@@ -1,8 +1,11 @@
+import json
 import logging
 from typing import Any
 
 import docker
 import fastapi
+import requests
+from docker import errors as docker_errors
 
 from app import error, models, rpc, stats
 
@@ -22,6 +25,10 @@ ERROR_CODES: dict[int, dict[str, Any]] = {
         "description": "Node exists but is not running",
         "model": error.ErrorMessage,
     },
+    fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY: {
+        "description": "Failed to deserialize JSON response from node",
+        "model": error.ErrorMessage,
+    },
     fastapi.status.HTTP_424_FAILED_DEPENDENCY: {
         "description": "Node exists but did not respond",
         "model": error.ErrorMessage,
@@ -38,6 +45,30 @@ TAG_DEBUG: str = "debug"
 
 logger = logging.getLogger(__name__)
 app = fastapi.FastAPI()
+
+
+@app.exception_handler(docker_errors.NotFound)
+async def excepton_handler_docker_not_found(
+    request: fastapi.Request, _: docker_errors.APIError
+):
+    raise error.ErrorNodeNotFound(request.path_params["node"])
+
+
+@app.exception_handler(docker_errors.APIError)
+async def excepton_handler_docker_api_error(
+    request: fastapi.Request, _: docker_errors.APIError
+):
+    raise error.ErrorNodeSilent(request.path_params["node"])
+
+
+@app.exception_handler(requests.exceptions.JSONDecodeError)
+async def exception_handler_requests_json_decode_error(
+    request: fastapi.Request, err: requests.exceptions.JSONDecodeError
+):
+    api_call = (
+        str(request.url).removeprefix(str(request.base_url)).partition("?")[0]
+    )
+    raise error.ErrorJsonDecode(request.path_params["node"], api_call, err)
 
 
 # =========================================================================== #
