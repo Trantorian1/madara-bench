@@ -46,9 +46,10 @@ app = fastapi.FastAPI()
 
 
 @app.get("/bench/cpu/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
-async def node_get_cpu_normalized(
-    node: models.NodeName, system: models.query.System = False
-):
+async def node_get_cpu(
+    node: models.NodeName,
+    system: models.query.System = False,
+) -> models.ResponseModelStats[float]:
     """## Get node CPU usage.
 
     Return format depends on the value of `system`, but will default to a
@@ -65,7 +66,9 @@ async def node_get_cpu_normalized(
 
 
 @app.get("/bench/memory/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
-async def node_get_memory(node: models.NodeName):
+async def node_get_memory(
+    node: models.NodeName,
+) -> models.ResponseModelStats[int]:
     """## Get node memory usage.
 
     Fetches the amount of ram used by the node. Result will be in _bytes_.
@@ -76,7 +79,9 @@ async def node_get_memory(node: models.NodeName):
 
 
 @app.get("/bench/storage/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
-async def node_get_storage(node: models.NodeName):
+async def node_get_storage(
+    node: models.NodeName,
+) -> models.ResponseModelStats[int]:
     """## Returns node storage usage
 
     Fetches the amount of space the node database is currently taking up. This

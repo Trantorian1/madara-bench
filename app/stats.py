@@ -1,3 +1,5 @@
+import datetime
+
 import docker
 from docker import errors as docker_errors
 from docker.models.containers import Container
@@ -19,10 +21,17 @@ def container_get(
 
 
 # As explained in https://github.com/moby/moby/issues/26711
-def stats_cpu_normalized(node: models.NodeName, container: Container) -> float:
+def stats_cpu_normalized(
+    node: models.NodeName, container: Container
+) -> models.ResponseModelStats[float]:
     error.container_check_running(node, container)
 
-    stats = container.stats(stream=False)
+    time_start = datetime.datetime.now()
+
+    try:
+        stats = container.stats(stream=False)
+    except docker_errors.APIError:
+        raise error.ErrorNodeSilent(node)
 
     cpu_delta: int = (
         stats["cpu_stats"]["cpu_usage"]["total_usage"]
@@ -34,18 +43,28 @@ def stats_cpu_normalized(node: models.NodeName, container: Container) -> float:
         - stats["precpu_stats"]["system_cpu_usage"]
     )
 
-    if system_delta > 0:
-        return (
-            (float(cpu_delta) / float(system_delta)) * float(cpu_count) * 100.0
-        )
-    else:
-        return 0.0
+    cpu_usage = (
+        (float(cpu_delta) / float(system_delta)) * float(cpu_count) * 100.0
+        if system_delta > 0
+        else 0.0
+    )
+
+    return models.ResponseModelStats(
+        node=node, when=time_start, value=cpu_usage
+    )
 
 
-def stats_cpu_system(node: models.NodeName, container: Container) -> float:
+def stats_cpu_system(
+    node: models.NodeName, container: Container
+) -> models.ResponseModelStats[float]:
     error.container_check_running(node, container)
 
-    stats = container.stats(stream=False)
+    time_start = datetime.datetime.now()
+
+    try:
+        stats = container.stats(stream=False)
+    except docker_errors.APIError:
+        raise error.ErrorNodeSilent(node)
 
     cpu_delta: int = (
         stats["cpu_stats"]["cpu_usage"]["total_usage"]
@@ -56,27 +75,51 @@ def stats_cpu_system(node: models.NodeName, container: Container) -> float:
         - stats["precpu_stats"]["system_cpu_usage"]
     )
 
-    if system_delta > 0:
-        return (float(cpu_delta) / float(system_delta)) * 100.0
-    else:
-        return 0.0
+    cpu_usage = (
+        (float(cpu_delta) / float(system_delta)) * 100.0
+        if system_delta > 0
+        else 0.0
+    )
+
+    return models.ResponseModelStats(
+        node=node, when=time_start, value=cpu_usage
+    )
 
 
-def stats_memory(node: models.NodeName, container: Container) -> int:
+def stats_memory(
+    node: models.NodeName, container: Container
+) -> models.ResponseModelStats[int]:
     error.container_check_running(node, container)
 
-    stats = container.stats(stream=False)
-    return stats["memory_stats"]["usage"]
+    time_start = datetime.datetime.now()
+
+    try:
+        stats = container.stats(stream=False)
+    except docker_errors.APIError:
+        raise error.ErrorNodeSilent(node)
+
+    memory_usage = stats["memory_stats"]["usage"]
+    return models.ResponseModelStats(
+        node=node, when=time_start, value=memory_usage
+    )
 
 
-def stats_storage(node: models.NodeName, container: Container) -> int:
+def stats_storage(
+    node: models.NodeName, container: Container
+) -> models.ResponseModelStats[int]:
     error.container_check_running(node, container)
+
+    time_start = datetime.datetime.now()
 
     try:
         result = container.exec_run(["du", "-sb", "/data"])
-        stdin: str = result.output.decode("utf8")
-        test = stdin.removesuffix("\t/data\n")
-        return int(test)
-
     except docker_errors.APIError:
         raise error.ErrorNodeSilent(node)
+
+    stdin: str = result.output.decode("utf8")
+    test = stdin.removesuffix("\t/data\n")
+    storage_usage = int(test)
+
+    return models.ResponseModelStats(
+        node=node, when=time_start, value=storage_usage
+    )

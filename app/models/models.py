@@ -1,7 +1,9 @@
+import datetime
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Any, Generic, TypeVar
 
 import pydantic
+from pydantic.generics import GenericModel
 
 REGEX_HEX: str = "^0x[a-fA-F0-9]+$"
 REGEX_BASE_64: str = "^0x[a-zA-Z0-9]+$"
@@ -17,9 +19,49 @@ FieldBase64 = Annotated[
     str, pydantic.Field(pattern=REGEX_BASE_64, examples=["0x0"])
 ]
 
+T = TypeVar("T")
+
 
 class NodeName(str, Enum):
-    madara = "madara"
+    """The node used to run benchmarks."""
+
+    MADARA = "madara"
+
+
+class ResponseModelStats(GenericModel, Generic[T]):
+    """Holds system measurement (cpu, ram, storage) identifying data. This is
+    used to store data resulting from a system measurement for use in
+    benchmarking.
+
+    `time_start` is kept as a way to sort measurements if needed.
+    """
+
+    node: NodeName
+    when: Annotated[
+        datetime.datetime,
+        pydantic.Field(description="Measurement issuing time"),
+    ]
+    value: Annotated[T, pydantic.Field(description="System measurement result")]
+
+
+class ResponseModelJSON(pydantic.BaseModel):
+    """Holds JSON RPC call identifying data and execution time. This is used to
+    store data resulting from a JSON RPC call for use in benchmarking
+    """
+
+    node: NodeName
+    method: Annotated[
+        str, pydantic.Field(description="JSON RPC method being called")
+    ]
+    when: Annotated[
+        datetime.datetime, pydantic.Field(description="Call issuing time")
+    ]
+    elapsed: Annotated[
+        int, pydantic.Field(description="Call response delay, in nanoseconds")
+    ]
+    output: Annotated[
+        dict[str, Any], pydantic.Field(description="JSON RPC node response")
+    ]
 
 
 class BlockTag(str, Enum):
