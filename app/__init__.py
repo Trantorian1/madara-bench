@@ -662,7 +662,7 @@ async def starknet_addDeployAccountTransaction(
     container = stats.container_get(node)
     if isinstance(container, Container):
         url = rpc.rpc_url(node, container)
-        return rpc.rpc_starknet_addDeplyAccountTransaction(
+        return rpc.rpc_starknet_addDeployAccountTransaction(
             url, deploy_account_transaction
         )
     else:
