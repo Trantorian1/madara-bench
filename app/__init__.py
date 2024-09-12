@@ -113,6 +113,34 @@ async def node_get_storage(node: models.NodeName):
 # =========================================================================== #
 
 
+@app.get(
+    "/info/rpc/starknet_blockHashAndNumber/{node}",
+    responses={**ERROR_CODES},
+    tags=[TAG_READ],
+)
+async def starknet_blockHashAndNumber(node: models.NodeName):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_blockHashAndNumber(url)
+    else:
+        return container
+
+
+@app.get(
+    "/info/rpc/starknet_blockNumber/{node}",
+    responses={**ERROR_CODES},
+    tags=[TAG_READ],
+)
+async def starknet_blockNumber(node: models.NodeName):
+    container = stats.container_get(node)
+    if isinstance(container, Container):
+        url = rpc.rpc_url(node, container)
+        return rpc.rpc_starknet_blockNumber(url)
+    else:
+        return container
+
+
 @app.post(
     "/info/rpc/starknet_call/{node}",
     responses={**ERROR_CODES},

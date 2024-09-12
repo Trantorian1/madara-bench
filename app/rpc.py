@@ -88,6 +88,14 @@ def rpc_url(node: models.NodeName, container: Container):
 # =========================================================================== #
 
 
+def rpc_starknet_blockHashAndNumber(url: str) -> dict[str, Any]:
+    return json_rpc(url, STARKNET_BLOCK_HASH_AND_NUMBER)
+
+
+def rpc_starknet_blockNumber(url: str) -> dict[str, Any]:
+    return json_rpc(url, STARKNET_BLOCK_NUMBER)
+
+
 def rpc_starknet_call(
     url: str,
     request: models.body.Call,
