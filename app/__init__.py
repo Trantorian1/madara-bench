@@ -3,7 +3,6 @@ from typing import Any
 
 import docker
 import fastapi
-from docker.models.containers import Container
 
 from app import error, models, rpc, stats
 
@@ -47,37 +46,29 @@ app = fastapi.FastAPI()
 
 
 @app.get("/bench/cpu/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
-async def node_get_cpu_normalized(node: models.NodeName):
-    """Get node CPU usage.
+async def node_get_cpu_normalized(
+    node: models.NodeName, system: models.query.System = False
+):
+    """## Get node CPU usage.
 
-    This is represented as a percent value normalized to the number of CPU
-    cores. So, for example, 800% represents 800% of the capabilites of a single
-    core, and not the entire system.
+    Return format depends on the value of `system`, but will default to a
+    percent value normalized to the number of CPU cores. So, for example, 800%
+    usage would represent 800% of the capabilites of a single core, and not the
+    entire system.
     """
 
     container = stats.container_get(node)
-    return stats.stats_cpu_normalized(node, container)
-
-
-@app.get(
-    "/bench/cpu/system/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH]
-)
-async def node_get_cpu_system(node: models.NodeName):
-    """Get node cpu usage.
-
-    This is represented as a percent value of total system usage. So, for
-    example, 75% represents 75% of the capabilites of the entire system.
-    """
-
-    container = stats.container_get(node)
-    return stats.stats_cpu_system(node, container)
+    if system:
+        return stats.stats_cpu_system(node, container)
+    else:
+        return stats.stats_cpu_normalized(node, container)
 
 
 @app.get("/bench/memory/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
 async def node_get_memory(node: models.NodeName):
-    """Get node memory usage.
+    """## Get node memory usage.
 
-    Fetches the amount of ram used by the node in bytes.
+    Fetches the amount of ram used by the node. Result will be in _bytes_.
     """
 
     container = stats.container_get(node)
@@ -86,10 +77,11 @@ async def node_get_memory(node: models.NodeName):
 
 @app.get("/bench/storage/{node}", responses={**ERROR_CODES}, tags=[TAG_BENCH])
 async def node_get_storage(node: models.NodeName):
-    """Returns node storage usage
+    """## Returns node storage usage
 
-    Fetches the amount of space the node database is currently taking up, in
-    bytes
+    Fetches the amount of space the node database is currently taking up. This
+    is currently set up to be the size of `/data` where the node db should be
+    set up. Result will be in _bytes_.
     """
 
     container = stats.container_get(node)

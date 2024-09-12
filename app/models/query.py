@@ -4,6 +4,17 @@ import fastapi
 
 from .models import *
 
+System = Annotated[
+    bool,
+    fastapi.Query(
+        description=(
+            "If true, cpu usage will be returned as a percent value of total "
+            "system usage as opposed to being normalized to the number of CPU"
+            "cores. This means 75% usage would represent 75% of system usage."
+        )
+    ),
+]
+
 BlockHash = Annotated[
     str | None,
     fastapi.Query(
