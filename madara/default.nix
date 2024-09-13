@@ -27,17 +27,123 @@ with import <nixpkgs>
 };
 let
   rustPlatform = makeRustPlatform {
-    cargo = rust-bin.stable."1.78.0".minimal;
-    rustc = rust-bin.stable."1.78.0".minimal;
+    cargo = rust-bin.nightly."2024-05-31".minimal;
+    rustc = rust-bin.nightly."2024-05-31".minimal;
   };
+
+  cairoVersion = "2.8.2";
+  #
+  #
+  # cairoSrc = fetchFromGitHub {
+  #   owner = "starkware-libs";
+  #   repo = "cairo";
+  #   rev = "v${cairoVersion}";
+  #   hash = "sha256-vBdIGkdQa/csqsu4DbgIYitVbDLDUAFmIUytZ7IcxNk=";
+  # };
+  #
+  cairoArchive = fetchurl {
+    name = "cairo-archive-${cairoVersion}";
+    url = "https://github.com/starkware-libs/cairo/archive/v${cairoVersion}.zip";
+    sha256 = "sha256-biuqlMHtm7Ub97O4HvujNx/RPWdZMxaoLvtv5or8v4U=";
+  };
+  #
+  # cairo = rustPlatform.buildRustPackage rec {
+  #   pname = "cairo";
+  #   version = cairoVersion;
+  #
+  #   doCheck = false;
+  #   src = cairoSrc;
+  #   cargoSha256 = "sha256-w3kzEM34HYQ6KgILaDpmZbCgAh8Ql24DRe12woUAhVI=";
+  # };
+  #
+  scarbVersion = "1.0.0";
+
+  scarbSrc = fetchFromGitHub {
+    owner = "Trantorian1";
+    repo = "scarb";
+    rev = "b7b1937e6b5b7b18ed9fb267f9a7dad0618411c6";
+    hash = "sha256-s2cYuZqv1/6UGYg1btRr/ckKKevoUudV8ulCML5PeuA=";
+  };
+
+  scarb = rustPlatform.buildRustPackage rec {
+    pname = "scarb";
+    version = scarbVersion;
+
+    src = scarbSrc;
+
+    CARGO_MANIFEST_DIR = "${scarbSrc}";
+    CAIRO_ARCHIVE = cairoArchive;
+    CARGO_PKG_NAME = "scarab";
+
+    postPatch = ''
+      sed -i 's/name = ".*"/name = "scarb"/' Cargo.toml
+    '';
+
+    cargoLock = {
+      lockFile = scarbSrc + "/Cargo.lock";
+      allowBuiltinFetchGit = true;
+    };
+
+    nativeBuildInputs = with pkgs; [
+      pkg-config
+      openssl
+      clang
+      perl
+      cmake
+    ];
+
+    buildInputs = with pkgs; [
+      openssl
+    ];
+
+    doCheck = false;
+
+    preBuild = ''
+      export LIBCLANG_PATH=${llvmPackages.libclang.lib}/lib
+    '';
+  };
+  # scarb = rustPlatform.buildRustPackage rec {
+  #   pname = "scarb";
+  #   version = scarbVersion;
+  #
+  #   src = fetchFromGitHub {
+  #     owner = "software-mansion";
+  #     repo = "scarb";
+  #     rev = "v${scarbVersion}";
+  #     sha256 = "sha256-XelhTcEZ3xcSZOpB1hC1XNCl/QgOinAICH4IwvEzRjw=";
+  #   };
+  #
+  #   cargoSha256 = "sha256-bdS5tOAUiemgagJZ4CSu0OR2NoGb56Hf0XGC+LwPXLs=";
+  # };
+  # scarb = stdenv.mkDerivation {
+  #   pname = "scarb";
+  #   version = "0.2.0";
+  #
+  #   src = fetchurl {
+  #     url = "https://github.com/software-mansion/scarb/releases/download/v${scarbVersion}/scarb-v${scarbVersion}-x86_64-unknown-linux-gnu.tar.gz";
+  #     sha256 = "sha256-1/lwrAvxx3RjX5AP/bU8LoEgcDVK/+2o6l6u886A3CE=";
+  #   };
+  #
+  #   nativeBuildInputs = [ rustPlatform.rust.cargo ];
+  #
+  #   unpackPhase = ''
+  #     tar xzf $src
+  #   '';
+  #
+  #   installPhase = ''
+  #     mkdir -p $out/bin
+  #     ls -l scarb-v${scarbVersion}-x86_64-unknown-linux-gnu/bin
+  #     cp scarb-v${scarbVersion}-x86_64-unknown-linux-gnu/bin/scarb $out/bin/
+  #   '';
+  # };
 
   # The version of Madara being used
   # Updating this might also cause other nix hashes to need to be re-specified.
   madaraSrc = fetchFromGitHub {
-    owner = "madara-alliance";
+    owner = "Trantorian1";
     repo = "madara";
-    rev = "25f03eeb50dd3d92110d269547e499d9810e6bff";
-    sha256 = "sha256-zbQaw9d8X4/sYgdXiVq981eDGWO3muscqD3Q6F44xi0=";
+    rev = "9f11048d12e6198937ea47724a98adba42c25e84";
+    sha256 = "sha256-ZRKZh6i1xV1AXEHeLpNZz+bU2RpCZnndNc9h9OZPr+w=";
   };
 
   # Building madara with nix
@@ -50,19 +156,7 @@ let
 
     cargoLock = {
       lockFile = madaraSrc + "/Cargo.lock";
-
-      # Crates specified as git dependencies need to have a unique hash 
-      # associated to them to guarantee reproduceability
-      #
-      # For new dependencies, set this to `lib.fakeSha256` and copy the correct 
-      # hash once the build fails
-      outputHashes = {
-          "bonsai-trie-0.1.0" = "sha256-7yyCI7y/2g7QfyyHHBWKu+c/kHR+ktqTyLazPeq6xP0=";
-          "cairo-lang-casm-1.0.0-alpha.6" = "sha256-U4kTAAktXK7bFEkQAISQK3954hDkyxdsJU9c5hXmzpU=";
-          "cairo-lang-casm-1.0.0-rc0" = "sha256-T+1o1H/NfJ19bwg3Lrqf11ocnpRyZw9R+y9uc3YDcgE=";
-          "starknet-core-0.11.0" = "sha256-bzTFGZ9JnFf2n+Hk0/7pcWSTH/Vm8RITpKwLbV9p+4A=";
-          "starknet-types-core-0.1.5" = "sha256-m20/wEcJMPMVDneVnWqlTI0ich/tn4UFUwIEO+0MUw0=";
-        };
+      allowBuiltinFetchGit = true;
     };
 
     nativeBuildInputs = with pkgs; [
@@ -70,6 +164,8 @@ let
       protobuf
       openssl
       clang
+      cairo
+      scarb
     ];
 
     buildInputs = with pkgs; [
@@ -85,6 +181,7 @@ let
     # manually
     preBuild = ''
       export LIBCLANG_PATH=${llvmPackages.libclang.lib}/lib
+      scarb
     '';
   };
 
@@ -100,7 +197,7 @@ let
   # busybox to shave of even more space with tiny implementation of these.
   # `cat` is used to retrieve mounted secrets
   # `du` is used to measure the size of the db
-  cat = stdenv.mkDerivation {
+  util = stdenv.mkDerivation {
     name = "minimal-cat";
     buildInputs = [ busybox ];
     buildCommand = ''
@@ -140,7 +237,7 @@ let
       paths = [
         madara
         runner
-        cat
+        util
         # This is necessary to avoid 'unable to get local issuer certificate'
         # https://discourse.nixos.org/t/adding-a-new-ca-certificate-to-included-bundle/14301/8
         cacert
