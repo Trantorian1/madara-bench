@@ -85,8 +85,17 @@ debug:
 
 %image.tar.gz: node = $(@D)
 %image.tar.gz: %default.nix
-	@rm -f $(node)/image.tar.gz
-	@echo -e "$(TERTIARY)building$(RESET) $(PASS)$(node)$(RESET)" ;
-	@nix-build $(node) -o $(node)/result
-	@$(node)/result/bin/copyto $(node)/image.tar.gz
-	@docker load -i $(node)/image.tar.gz
+	@echo -e "$(TERTIARY)building$(RESET) $(PASS)$(node)$(RESET)"
+	@docker image rm -f $(node):latest || true
+	@docker build -t $(node):latest $(node)
+
+#	Nix Image build has had to been remove following the introduction of scarb
+#	into the build process. This is because scarb needs to download depencies
+#	during the madara build process, which results in an impure derivation.
+#	This does not play well with nix. The only solution to this would be to
+#	propose an upstream pr to the scarb repo which allows scarb to re-use
+#	locally available dependencies, even if they were not downloaded by it.
+#
+#	@nix-build $(node) -o $(node)/result
+#	@$(node)/result/bin/copyto $(node)/image.tar.gz
+#	@docker load -i $(node)/image.tar.gz

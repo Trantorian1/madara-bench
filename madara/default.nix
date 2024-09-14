@@ -32,52 +32,36 @@ let
   };
 
   cairoVersion = "2.8.2";
-  #
-  #
-  # cairoSrc = fetchFromGitHub {
-  #   owner = "starkware-libs";
-  #   repo = "cairo";
-  #   rev = "v${cairoVersion}";
-  #   hash = "sha256-vBdIGkdQa/csqsu4DbgIYitVbDLDUAFmIUytZ7IcxNk=";
-  # };
-  #
+
+  # Required to build scarb
   cairoArchive = fetchurl {
     name = "cairo-archive-${cairoVersion}";
     url = "https://github.com/starkware-libs/cairo/archive/v${cairoVersion}.zip";
     sha256 = "sha256-biuqlMHtm7Ub97O4HvujNx/RPWdZMxaoLvtv5or8v4U=";
   };
-  #
-  # cairo = rustPlatform.buildRustPackage rec {
-  #   pname = "cairo";
-  #   version = cairoVersion;
-  #
-  #   doCheck = false;
-  #   src = cairoSrc;
-  #   cargoSha256 = "sha256-w3kzEM34HYQ6KgILaDpmZbCgAh8Ql24DRe12woUAhVI=";
-  # };
-  #
-  scarbVersion = "1.0.0";
 
+  scarbVersion = "2.8.2";
+
+  # Scarb, the cairo package manager, used to run contracts for devenet
+  # integration in the madara node
   scarbSrc = fetchFromGitHub {
-    owner = "Trantorian1";
+    owner = "software-mansion";
     repo = "scarb";
-    rev = "b7b1937e6b5b7b18ed9fb267f9a7dad0618411c6";
-    hash = "sha256-s2cYuZqv1/6UGYg1btRr/ckKKevoUudV8ulCML5PeuA=";
+    rev = "aaa5a5f74d20490a5f812a35a2705aeea3b55b68";
+    hash = "sha256-1aE1vZvNEDmxT1tXwQDm5smFv2Yf434WaBC8rd5TYYQ=";
   };
 
+  # Building scarb with nix
   scarb = rustPlatform.buildRustPackage rec {
     pname = "scarb";
     version = scarbVersion;
 
     src = scarbSrc;
 
+    # This is neeed by a buildscript in scarb/utils/scarb-build-metadata/build.rs
     CARGO_MANIFEST_DIR = "${scarbSrc}";
+    CARGO_PKG_NAME = "scarb";
     CAIRO_ARCHIVE = cairoArchive;
-    CARGO_PKG_NAME = "scarab";
-
-    postPatch = ''
-      sed -i 's/name = ".*"/name = "scarb"/' Cargo.toml
-    '';
 
     cargoLock = {
       lockFile = scarbSrc + "/Cargo.lock";
@@ -102,45 +86,19 @@ let
       export LIBCLANG_PATH=${llvmPackages.libclang.lib}/lib
     '';
   };
-  # scarb = rustPlatform.buildRustPackage rec {
-  #   pname = "scarb";
-  #   version = scarbVersion;
-  #
-  #   src = fetchFromGitHub {
-  #     owner = "software-mansion";
-  #     repo = "scarb";
-  #     rev = "v${scarbVersion}";
-  #     sha256 = "sha256-XelhTcEZ3xcSZOpB1hC1XNCl/QgOinAICH4IwvEzRjw=";
-  #   };
-  #
-  #   cargoSha256 = "sha256-bdS5tOAUiemgagJZ4CSu0OR2NoGb56Hf0XGC+LwPXLs=";
-  # };
-  # scarb = stdenv.mkDerivation {
-  #   pname = "scarb";
-  #   version = "0.2.0";
-  #
-  #   src = fetchurl {
-  #     url = "https://github.com/software-mansion/scarb/releases/download/v${scarbVersion}/scarb-v${scarbVersion}-x86_64-unknown-linux-gnu.tar.gz";
-  #     sha256 = "sha256-1/lwrAvxx3RjX5AP/bU8LoEgcDVK/+2o6l6u886A3CE=";
-  #   };
-  #
-  #   nativeBuildInputs = [ rustPlatform.rust.cargo ];
-  #
-  #   unpackPhase = ''
-  #     tar xzf $src
-  #   '';
-  #
-  #   installPhase = ''
-  #     mkdir -p $out/bin
-  #     ls -l scarb-v${scarbVersion}-x86_64-unknown-linux-gnu/bin
-  #     cp scarb-v${scarbVersion}-x86_64-unknown-linux-gnu/bin/scarb $out/bin/
-  #   '';
-  # };
+
+  cairo-contracts = fetchgit {
+    url = "https://github.com/openzeppelin/cairo-contracts";
+    rev = "bac08ee8c47a87e4060d196bf30abc184930c247";
+    sha256 = "sha256-GziEDo51Cl8XtD4o3OXb4Qn21R3eHTgCnPvY4GwXpV8=";
+  };
+
+  toTOML = pkgs.formats.toml { };
 
   # The version of Madara being used
   # Updating this might also cause other nix hashes to need to be re-specified.
   madaraSrc = fetchFromGitHub {
-    owner = "Trantorian1";
+    owner = "madara-alliance";
     repo = "madara";
     rev = "9f11048d12e6198937ea47724a98adba42c25e84";
     sha256 = "sha256-ZRKZh6i1xV1AXEHeLpNZz+bU2RpCZnndNc9h9OZPr+w=";
@@ -154,6 +112,10 @@ let
 
     src = madaraSrc;
 
+    SCARB_TARGET_DIR = madaraSrc + "/target";
+    SCARB_CACHE = "/tmp/.cache/scarab";
+    CAIRO_ARCHIVE = cairoArchive;
+
     cargoLock = {
       lockFile = madaraSrc + "/Cargo.lock";
       allowBuiltinFetchGit = true;
@@ -164,7 +126,6 @@ let
       protobuf
       openssl
       clang
-      cairo
       scarb
     ];
 
@@ -172,6 +133,14 @@ let
       openssl
     ];
 
+    # This will currently fail due to how scarb is used in the codebase,
+    # resulting in an impure build which requires network access to download 
+    # dependencies during the build step. It seems the only way to fix this 
+    # would be to make upstream changes to scarb to allow pre-feching
+    # dependencies and making them available to scarb
+    #
+    # Current workaround is to rely on a simpler but less reproducible and 
+    # performant Dockerfile
     buildType = "production";
 
     # Tests are disabled as we assume we are already using a working version
@@ -181,7 +150,6 @@ let
     # manually
     preBuild = ''
       export LIBCLANG_PATH=${llvmPackages.libclang.lib}/lib
-      scarb
     '';
   };
 
