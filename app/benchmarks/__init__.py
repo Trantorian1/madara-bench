@@ -42,7 +42,7 @@ from . import generators
 @dataclass
 class BenchmarkTools:
     input_generator: Callable[[list[str], float], generators.InputGenerator]
-    runner: Callable[..., Coroutine[Any, Any, models.ResponseModelJSON]]
+    runner: Callable[..., Coroutine[Any, Any, Any]]
 
 
 # Mapping from rpc method name to its associated runner and input generator
@@ -53,6 +53,9 @@ MAPPINGS: dict[rpc.RpcCall, BenchmarkTools] = {
     ),
     rpc.RpcCall.STARKNET_GET_STORAGE_AT: BenchmarkTools(
         generators.gen_starknet_get_storage_at, rpc.rpc_starknet_getStorageAt
+    ),
+    rpc.RpcCall.STARKNET_ESTIMATE_FEE: BenchmarkTools(
+        generators.gen_starknet_estimate_fee, rpc.rpc_starknet_estimateFee
     ),
 }
 

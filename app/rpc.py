@@ -5,6 +5,12 @@ from typing import Any
 
 import requests
 from docker.models.containers import Container
+from starknet_py.net.full_node_client import (
+    AccountTransaction,
+    FullNodeClient,
+    Hash,
+    Tag,
+)
 
 from app import error, models
 
@@ -131,19 +137,29 @@ def rpc_starknet_chainId(url: str) -> models.ResponseModelJSON:
     return json_rpc(url, RpcCall.STARKNET_CHAIN_ID)
 
 
-def rpc_starknet_estimateFee(
+async def rpc_starknet_estimateFee(
     url: str,
-    body: models.body.EstimateFee,
-    block_id: str | dict[str, str] | dict[str, int],
+    tx: AccountTransaction | list[AccountTransaction],
+    block_hash: Hash | None = None,
+    block_number: Tag | int | None = None,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_ESTIMATE_FEE,
-        {
-            "request": body.request,
-            "simulation_flags": body.simulation_flags,
-            "block_id": block_id,
-        },
+    client = FullNodeClient(node_url=url)
+
+    # Temporary tape until starknet py has been integrated into the codebase
+    time_start = datetime.datetime.now()
+    perf_start = time.perf_counter_ns()
+    estimate_fee = await client.estimate_fee(
+        tx=tx, block_hash=block_hash, block_number=block_number
+    )
+    perf_stop = time.perf_counter_ns()
+    perf_delta = perf_stop - perf_start
+
+    return models.ResponseModelJSON(
+        node=models.NodeName.MADARA,
+        method=RpcCall.STARKNET_ESTIMATE_FEE,
+        when=time_start,
+        elapsed=perf_delta,
+        output=estimate_fee,
     )
 
 

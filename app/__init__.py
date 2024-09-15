@@ -5,6 +5,12 @@ import docker
 import fastapi
 import requests
 from docker import errors as docker_errors
+from starknet_py.net.full_node_client import (
+    AccountTransaction,
+    FullNodeClient,
+    Hash,
+    Tag,
+)
 
 from app import benchmarks, error, models, rpc, stats
 
@@ -208,15 +214,16 @@ async def starknet_chainId(node: models.NodeName) -> models.ResponseModelJSON:
 )
 async def starknet_estimateFee(
     node: models.NodeName,
-    body: models.body.EstimateFee,
-    block_hash: models.query.BlockHash = None,
-    block_number: models.query.BlockNumber = None,
-    block_tag: models.query.QueryBlockTag = None,
-) -> models.ResponseModelJSON:
+    body: AccountTransaction | list[AccountTransaction],
+    block_hash: Hash | None = None,
+    block_number: Tag | int | None = None,
+):
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
-    block_id = rpc.to_block_id(block_hash, block_number, block_tag)
-    return rpc.rpc_starknet_estimateFee(url, body, block_id)
+    client = FullNodeClient(node_url=url)
+    return await client.estimate_fee(
+        tx=body, block_hash=block_hash, block_number=block_number
+    )
 
 
 @app.post(

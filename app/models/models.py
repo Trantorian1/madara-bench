@@ -87,9 +87,7 @@ class ResponseModelJSON(pydantic.BaseModel):
     elapsed: Annotated[
         int, pydantic.Field(description="Call response delay, in nanoseconds")
     ]
-    output: Annotated[
-        dict[str, Any], pydantic.Field(description="JSON RPC node response")
-    ]
+    output: Annotated[Any, pydantic.Field(description="JSON RPC node response")]
 
 
 class BlockTag(str, Enum):
