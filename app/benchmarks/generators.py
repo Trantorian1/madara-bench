@@ -83,7 +83,7 @@ async def gen_starknet_getStorageAt(
         await asyncio.sleep(interval)
 
 
-async def gen_starknetEstimateFee(
+async def gen_starknet_estimateFee(
     urls: list[str], interval: float
 ) -> InputGenerator:
     client = FullNodeClient(node_url=urls[0])
@@ -178,6 +178,16 @@ async def gen_starknetEstimateFee(
 
 
 async def gen_starknet_traceBlockTransactions(
+    urls: list[str], interval: float
+) -> InputGenerator:
+    while True:
+        block_number = latest_common_block_number(urls)
+        block_number = random.randrange(block_number - 100, block_number)
+        yield {"block_id": {"block_number": block_number}}
+        await asyncio.sleep(interval)
+
+
+async def gen_starknet_getBlockWithReceipts(
     urls: list[str], interval: float
 ) -> InputGenerator:
     while True:

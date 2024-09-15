@@ -55,11 +55,15 @@ MAPPINGS: dict[rpc.RpcCall, BenchmarkTools] = {
         generators.gen_starknet_getStorageAt, rpc.rpc_starknet_getStorageAt
     ),
     rpc.RpcCall.STARKNET_ESTIMATE_FEE: BenchmarkTools(
-        generators.gen_starknetEstimateFee, rpc.rpc_starknet_estimateFee
+        generators.gen_starknet_estimateFee, rpc.rpc_starknet_estimateFee
     ),
     rpc.RpcCall.STARKNET_TRACE_BLOCK_TRANSACTIONS: BenchmarkTools(
         generators.gen_starknet_traceBlockTransactions,
         rpc.rpc_starknet_traceBlockTransactions,
+    ),
+    rpc.RpcCall.STARKNET_GET_BLOCK_WITH_RECEIPTS: BenchmarkTools(
+        generators.gen_starknet_getBlockWithReceipts,
+        rpc.rpc_starknet_getBlockWithReceipts,
     ),
 }
 

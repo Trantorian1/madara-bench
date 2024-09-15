@@ -199,7 +199,7 @@ def rpc_starknet_getBlockTransactionCount(
     )
 
 
-def rpc_starknet_getBlockWithReceipts(
+async def rpc_starknet_getBlockWithReceipts(
     url: str, block_id: str | dict[str, str] | dict[str, int]
 ) -> models.ResponseModelJSON:
     return json_rpc(

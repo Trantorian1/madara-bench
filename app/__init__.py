@@ -292,7 +292,7 @@ async def starknet_getBlockWithReceipts(
     url = rpc.rpc_url(node, container)
     block_id = rpc.to_block_id(block_hash, block_number, block_tag)
 
-    return rpc.rpc_starknet_getBlockWithReceipts(url, block_id)
+    return await rpc.rpc_starknet_getBlockWithReceipts(url, block_id)
 
 
 @app.get(
