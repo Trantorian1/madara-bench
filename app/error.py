@@ -44,6 +44,17 @@ class ErrorNodeNotRunning(fastapi.HTTPException):
         )
 
 
+class ErrorCodePlumbing(fastapi.HTTPException):
+    def __init__(self) -> None:
+        super().__init__(
+            status_code=fastapi.status.HTTP_418_IM_A_TEAPOT,
+            detail=(
+                "Sorry! This section of the code is under works, I'm aware of "
+                "it and working on a fix, please contact me."
+            ),
+        )
+
+
 class ErrorJsonDecode(fastapi.HTTPException):
     def __init__(
         self,

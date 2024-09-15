@@ -1,7 +1,7 @@
 import datetime
 import time
 from enum import Enum
-from typing import Any
+from typing import Any, Coroutine
 
 import requests
 from docker.models.containers import Container
@@ -82,6 +82,26 @@ def json_rpc(
     )
 
 
+async def json_rpc_duct_tape(
+    method: str,
+    caller: Coroutine[Any, Any, Any],
+) -> models.ResponseModelJSON:
+    # Temporary tape until starknet py has been integrated into the codebase
+    time_start = datetime.datetime.now()
+    perf_start = time.perf_counter_ns()
+    output = await caller
+    perf_stop = time.perf_counter_ns()
+    perf_delta = perf_stop - perf_start
+
+    return models.ResponseModelJSON(
+        node=models.NodeName.MADARA,
+        method=method,
+        when=time_start,
+        elapsed=perf_delta,
+        output=output,
+    )
+
+
 def to_block_id(
     block_hash: str | None = None,
     block_number: int | None = None,
@@ -144,23 +164,11 @@ async def rpc_starknet_estimateFee(
     block_number: Tag | int | None = None,
 ) -> models.ResponseModelJSON:
     client = FullNodeClient(node_url=url)
-
-    # Temporary tape until starknet py has been integrated into the codebase
-    time_start = datetime.datetime.now()
-    perf_start = time.perf_counter_ns()
-    estimate_fee = await client.estimate_fee(
+    estimate_fee = client.estimate_fee(
         tx=tx, block_hash=block_hash, block_number=block_number
     )
-    perf_stop = time.perf_counter_ns()
-    perf_delta = perf_stop - perf_start
 
-    return models.ResponseModelJSON(
-        node=models.NodeName.MADARA,
-        method=RpcCall.STARKNET_ESTIMATE_FEE,
-        when=time_start,
-        elapsed=perf_delta,
-        output=estimate_fee,
-    )
+    return await json_rpc_duct_tape(RpcCall.STARKNET_ESTIMATE_FEE, estimate_fee)
 
 
 def rpc_starknet_estimateMessageFee(

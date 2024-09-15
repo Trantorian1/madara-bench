@@ -7,6 +7,7 @@ import requests
 from docker import errors as docker_errors
 from starknet_py.net.full_node_client import (
     AccountTransaction,
+    ClientError,
     FullNodeClient,
     Hash,
     Tag,
@@ -28,6 +29,13 @@ ERROR_CODES: dict[int, dict[str, Any]] = {
     },
     fastapi.status.HTTP_417_EXPECTATION_FAILED: {
         "description": "Node exists but is not running",
+        "model": error.ErrorMessage,
+    },
+    fastapi.status.HTTP_418_IM_A_TEAPOT: {
+        "description": (
+            "Beware there be dragons, this section of the code is still under "
+            "development"
+        ),
         "model": error.ErrorMessage,
     },
     fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY: {
@@ -74,6 +82,13 @@ async def exception_handler_requests_json_decode_error(
         str(request.url).removeprefix(str(request.base_url)).partition("?")[0]
     )
     raise error.ErrorJsonDecode(request.path_params["node"], api_call, err)
+
+
+@app.exception_handler(ClientError)
+async def exception_handler_starknet_py_client_error(
+    request: fastapi.Request, err: ClientError
+):
+    raise error.ErrorCodePlumbing
 
 
 # =========================================================================== #
@@ -655,3 +670,12 @@ async def docker_get_ports(node: models.NodeName):
 
     container = stats.container_get(node)
     return container.ports
+
+
+@app.get("/info/test/{node}", responses={**ERROR_CODES}, tags=[TAG_DEBUG])
+async def test(node: models.NodeName):
+    """List all the ports exposed by a node's container"""
+
+    container = stats.container_get(node)
+    url = rpc.rpc_url(node, container)
+    client = FullNodeClient(node_url=url)
