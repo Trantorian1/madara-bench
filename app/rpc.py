@@ -371,7 +371,7 @@ def rpc_starknet_simulateTransactions(
     )
 
 
-def rpc_starknet_traceBlockTransactions(
+async def rpc_starknet_traceBlockTransactions(
     url: str,
     block_id: str | dict[str, str] | dict[str, int],
 ) -> models.ResponseModelJSON:
