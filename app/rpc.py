@@ -259,7 +259,7 @@ def rpc_starknet_getStateUpdate(
     )
 
 
-def rpc_starknet_getStorageAt(
+async def rpc_starknet_getStorageAt(
     url: str,
     contract_address: str,
     contract_key: str,

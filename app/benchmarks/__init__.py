@@ -50,7 +50,10 @@ MAPPINGS: dict[rpc.RpcCall, BenchmarkTools] = {
     rpc.RpcCall.STARKNET_GET_BLOCK_WITH_TXS: BenchmarkTools(
         generators.gen_starknet_getBlockWithTxs,
         rpc.rpc_starknet_getBlockWithTxs,
-    )
+    ),
+    rpc.RpcCall.STARKNET_GET_STORAGE_AT: BenchmarkTools(
+        generators.gen_starknet_get_storage_at, rpc.rpc_starknet_getStorageAt
+    ),
 }
 
 
