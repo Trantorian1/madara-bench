@@ -1,5 +1,3 @@
-from typing import Any
-
 import fastapi
 from starknet_py.net.client_models import Call, Hash
 from starknet_py.net.models.transaction import (
@@ -12,92 +10,20 @@ from starknet_py.net.models.transaction import (
     InvokeV3,
 )
 
-from app.models.query import BlockHashDuctTape, BlockNumberDuctTape
+from app.models.query import BlockHash, BlockNumber
 
 from .models import *
 
+TxInvoke = Annotated[InvokeV1 | InvokeV3, fastapi.Body()]
 
-def ex_tx_invoke() -> dict[str, Any]:
-    tx = TxInvokeV1(
-        sender_address="0x0",
-        calldata=["0x0"],
-        max_fee="0x0",
-        signature="0x0",
-        nonce="0x0",
-    )
+TxDeclare = Annotated[DeclareV1 | DeclareV2 | DeclareV3, fastapi.Body()]
 
-    return tx.model_dump()
+TxDeploy = Annotated[DeployAccountV1 | DeployAccountV3, fastapi.Body()]
 
-
-def ex_tx_declare() -> dict[str, Any]:
-    tx = TxDeclareV2(
-        sender_address="0x0",
-        compiled_class_hash="0x0",
-        max_hash="0x0",
-        signature="0x0",
-        nonce="0x0",
-        contract_class=CairoV2ContractClass(
-            sierra_program=["0x0"],
-            contract_class_version="0.1.0",
-            entry_points_by_type=CairoV2EntryPointsByType(
-                CONTRUCTOR=[], EXTERNAL=[], L1_HANDLER=[]
-            ),
-            abi="",
-        ),
-    )
-
-    return tx.model_dump()
-
-
-TxInvoke = Annotated[
-    TxInvokeV0 | TxInvokeV1 | TxInvokeV3,
-    fastapi.Body(examples=[ex_tx_invoke()]),
-]
-TxInvokeDuctTape = Annotated[InvokeV1 | InvokeV3, fastapi.Body()]
-
-TxDeclare = Annotated[
-    TxDeclareV1 | TxDeclareV2 | TxDeclareV3,
-    fastapi.Body(examples=[ex_tx_declare()]),
-]
-TxDeclareDuctTape = Annotated[DeclareV1 | DeclareV2 | DeclareV3, fastapi.Body()]
-
-TxDeploy = Annotated[TxDeployV1 | TxDeclareV3, fastapi.Body()]
-TxDeployDuctTape = Annotated[DeployAccountV1 | DeployAccountV3, fastapi.Body()]
-
-Tx = Annotated[
-    TxInvoke | TxDeclare | TxDeploy,
-    fastapi.Body(examples=[ex_tx_invoke()]),
-]
-TxDuctTape = Annotated[
-    TxInvokeDuctTape | TxDeclareDuctTape | TxDeployDuctTape, fastapi.Body()
-]
+Tx = Annotated[TxInvoke | TxDeclare | TxDeploy, fastapi.Body()]
 
 
 Call = Annotated[Call, fastapi.Body(include_in_schema=False)]
-
-
-class _BodyEstimateFee(pydantic.BaseModel):
-    request: Annotated[
-        Tx,
-        fastapi.Body(
-            description=(
-                "a sequence of transactions to estimate, running each "
-                "transaction on the state resulting from applying all the "
-                "previous ones"
-            ),
-        ),
-    ]
-    simulation_flags: Annotated[
-        list[SimulationFlags],
-        fastapi.Body(
-            description=(
-                "describes what parts of the transaction should be executed"
-            )
-        ),
-    ]
-
-
-EstimateFee = Annotated[_BodyEstimateFee, fastapi.Body(include_in_schema=False)]
 
 
 class _BodyEstimateMessageFee(pydantic.BaseModel):
@@ -156,21 +82,21 @@ class _BodyGetEvents(pydantic.BaseModel):
         ),
     ]
     from_block_number: Annotated[
-        BlockNumberDuctTape | None,
+        BlockNumber | None,
         pydantic.Field(description="Filter events from this block (inclusive)"),
     ] = None
     from_block_hash: Annotated[
-        BlockHashDuctTape | None,
+        BlockHash | None,
         pydantic.Field(description="Filter events from this block (inclusive)"),
     ] = None
     to_block_number: Annotated[
-        BlockNumberDuctTape | None,
+        BlockNumber | None,
         pydantic.Field(
             description="Filter events up to this block (exclusive)"
         ),
     ] = None
     to_block_hash: Annotated[
-        BlockHashDuctTape | None,
+        BlockHash | None,
         pydantic.Field(
             description="Filter events up to this block (exclusive)"
         ),
@@ -197,10 +123,9 @@ GetEvents = Annotated[_BodyGetEvents, fastapi.Body(include_in_schema=False)]
 
 class _BodySimulateTransactions(pydantic.BaseModel):
     transactions: Annotated[
-        list[TxDuctTape],
+        list[Tx],
         pydantic.Field(
             description="The transactions to simulate",
-            examples=[[ex_tx_invoke(), ex_tx_invoke()]],
         ),
     ]
     skip_validate: Annotated[bool, pydantic.Field()] = False

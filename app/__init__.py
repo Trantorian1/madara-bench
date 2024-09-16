@@ -6,7 +6,6 @@ import fastapi
 import requests
 from docker import errors as docker_errors
 from starknet_py.net.client_errors import ClientError
-from starknet_py.net.full_node_client import FullNodeClient
 
 from app import benchmarks, error, models, rpc, stats
 
@@ -81,7 +80,7 @@ async def exception_handler_requests_json_decode_error(
 
 @app.exception_handler(ClientError)
 async def exception_handler_starknet_py_client_error(
-    request: fastapi.Request, err: ClientError
+    _request: fastapi.Request, _err: ClientError
 ):
     raise error.ErrorCodePlumbing
 
@@ -196,9 +195,9 @@ async def starknet_blockNumber(
 async def starknet_call(
     node: models.NodeName,
     call: models.body.Call,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -229,10 +228,10 @@ async def starknet_chainId(node: models.NodeName) -> models.ResponseModelJSON:
 )
 async def starknet_estimateFee(
     node: models.NodeName,
-    body: models.body.TxDuctTape | list[models.body.TxDuctTape],
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    body: models.body.Tx | list[models.body.Tx],
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ):
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -253,9 +252,9 @@ async def starknet_estimateFee(
 async def starknet_estimateMessageFee(
     node: models.NodeName,
     body: models.body.EstimateMessageFee,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -275,9 +274,9 @@ async def starknet_estimateMessageFee(
 )
 async def starknet_getBlockTransactionCount(
     node: models.NodeName,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -293,9 +292,9 @@ async def starknet_getBlockTransactionCount(
 )
 async def starknet_getBlockWithReceipts(
     node: models.NodeName,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -314,9 +313,9 @@ async def starknet_getBlockWithReceipts(
 )
 async def starknet_getBlockWithTxHashes(
     node: models.NodeName,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -335,9 +334,9 @@ async def starknet_getBlockWithTxHashes(
 )
 async def starknet_getBlockWithTxs(
     node: models.NodeName,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -357,9 +356,9 @@ async def starknet_getBlockWithTxs(
 async def starknet_getClass(
     node: models.NodeName,
     class_hash: models.query.ClassHash,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -380,9 +379,9 @@ async def starknet_getClass(
 async def starknet_getClassAt(
     node: models.NodeName,
     contract_address: models.query.ContractAddress,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -403,9 +402,9 @@ async def starknet_getClassAt(
 async def starknet_getClassHashAt(
     node: models.NodeName,
     contract_address: models.query.ContractAddress,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -440,9 +439,9 @@ async def starknet_getEvents(
 async def starknet_getNonce(
     node: models.NodeName,
     contract_address: models.query.ContractAddress,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -462,9 +461,9 @@ async def starknet_getNonce(
 )
 async def starknet_getStateUpdate(
     node: models.NodeName,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -485,9 +484,9 @@ async def starknet_getStorageAt(
     node: models.NodeName,
     contract_address: models.query.ContractAddress,
     contract_key: models.query.ContractKey,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -509,9 +508,9 @@ async def starknet_getStorageAt(
 async def starknet_getTransactionByBlockIdAndIndex(
     node: models.NodeName,
     index: models.query.TxIndex,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -603,9 +602,9 @@ async def starknet_syncing(node: models.NodeName) -> models.ResponseModelJSON:
 async def starknet_simulateTransactions(
     node: models.NodeName,
     body: models.body.SimulateTransactions,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -621,9 +620,9 @@ async def starknet_simulateTransactions(
 )
 async def starknet_traceBlockTransactions(
     node: models.NodeName,
-    block_hash: models.query.BlockHashDuctTape = None,
-    block_number: models.query.BlockNumberDuctTape = None,
-    block_tag: models.query.BlockTagDuctTape = "latest",
+    block_hash: models.query.BlockHash = None,
+    block_number: models.query.BlockNumber = None,
+    block_tag: models.query.BlockTag = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
@@ -666,12 +665,3 @@ async def docker_get_ports(node: models.NodeName):
 
     container = stats.container_get(node)
     return container.ports
-
-
-@app.get("/info/test/{node}", responses={**ERROR_CODES}, tags=[TAG_DEBUG])
-async def test(node: models.NodeName):
-    """List all the ports exposed by a node's container"""
-
-    container = stats.container_get(node)
-    url = rpc.rpc_url(node, container)
-    client = FullNodeClient(node_url=url)

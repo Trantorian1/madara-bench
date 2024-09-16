@@ -17,14 +17,6 @@ System = Annotated[
 ]
 
 BlockHash = Annotated[
-    str | None,
-    fastapi.Query(
-        pattern=REGEX_HEX,
-        description="A block hash, represented as a field element",
-    ),
-]
-
-BlockHashDuctTape = Annotated[
     Hash | None,
     fastapi.Query(
         pattern=REGEX_HEX,
@@ -34,23 +26,12 @@ BlockHashDuctTape = Annotated[
 
 
 BlockNumber = Annotated[
-    int | None, fastapi.Query(ge=0, description="A block number")
-]
-
-BlockNumberDuctTape = Annotated[
     int | None,
     fastapi.Query(ge=0, description="A block number or block tag"),
 ]
 
-BlockTagDuctTape = Annotated[
+BlockTag = Annotated[
     Tag | None,
-    fastapi.Query(
-        description="A block tag, ca be either 'latest' to reference the last synchronized block, or 'pending' to reference the last unverified block to yet be added to the chain",
-    ),
-]
-
-QueryBlockTag = Annotated[
-    BlockTag | None,
     fastapi.Query(
         description="A block tag, ca be either 'latest' to reference the last synchronized block, or 'pending' to reference the last unverified block to yet be added to the chain",
     ),
@@ -111,6 +92,3 @@ TestInterval = Annotated[
         description=("Interval between subsequent tests, in milliseconds"),
     ),
 ]
-
-
-BlockId = BlockHash | BlockNumber | BlockTag
