@@ -8,14 +8,12 @@ from starknet_py.net.client_models import (
     DeclareTransactionV3,
     DeployAccountTransactionV1,
     DeployAccountTransactionV3,
+    DeprecatedContractClass,
     InvokeTransactionV1,
     InvokeTransactionV3,
-)
-from starknet_py.net.full_node_client import (
-    DeprecatedContractClass,
-    FullNodeClient,
     SierraContractClass,
 )
+from starknet_py.net.full_node_client import FullNodeClient
 from starknet_py.net.models.transaction import (
     DeclareV1,
     DeclareV2,

@@ -5,13 +5,10 @@ import docker
 import fastapi
 import requests
 from docker import errors as docker_errors
-from starknet_py.net.full_node_client import (
-    AccountTransaction,
-    ClientError,
-    FullNodeClient,
-    Hash,
-    Tag,
-)
+from starknet_py.net.client_errors import ClientError
+from starknet_py.net.client_models import Hash, Tag
+from starknet_py.net.full_node_client import FullNodeClient
+from starknet_py.net.models.transaction import AccountTransaction
 
 from app import benchmarks, error, models, rpc, stats
 

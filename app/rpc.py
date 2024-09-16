@@ -5,12 +5,9 @@ from typing import Any, Coroutine
 
 import requests
 from docker.models.containers import Container
-from starknet_py.net.full_node_client import (
-    AccountTransaction,
-    FullNodeClient,
-    Hash,
-    Tag,
-)
+from starknet_py.net.client_models import Hash, Tag
+from starknet_py.net.full_node_client import FullNodeClient
+from starknet_py.net.models.transaction import AccountTransaction
 
 from app import error, models
 
