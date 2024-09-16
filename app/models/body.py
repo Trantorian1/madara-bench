@@ -197,18 +197,14 @@ GetEvents = Annotated[_BodyGetEvents, fastapi.Body(include_in_schema=False)]
 
 class _BodySimulateTransactions(pydantic.BaseModel):
     transactions: Annotated[
-        list[Tx],
+        list[TxDuctTape],
         pydantic.Field(
             description="The transactions to simulate",
             examples=[[ex_tx_invoke(), ex_tx_invoke()]],
         ),
     ]
-    simulation_flags: Annotated[
-        SimulationFlags,
-        pydantic.Field(
-            description="Describes what parts of the transaction should be executed"
-        ),
-    ]
+    skip_validate: Annotated[bool, pydantic.Field()] = False
+    skip_fee_charge: Annotated[bool, pydantic.Field()] = False
 
 
 SimulateTransactions = Annotated[

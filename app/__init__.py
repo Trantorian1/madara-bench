@@ -582,7 +582,7 @@ async def starknet_specVersion(
 @app.get(
     "/info/rpc/starknet_syncing/{node}",
     responses={**ERROR_CODES},
-    tags=[TAG_TRACE],
+    tags=[TAG_READ],
 )
 async def starknet_syncing(node: models.NodeName) -> models.ResponseModelJSON:
     container = stats.container_get(node)
@@ -603,14 +603,15 @@ async def starknet_syncing(node: models.NodeName) -> models.ResponseModelJSON:
 async def starknet_simulateTransactions(
     node: models.NodeName,
     body: models.body.SimulateTransactions,
-    block_hash: models.query.BlockHash = None,
-    block_number: models.query.BlockNumber = None,
-    block_tag: models.query.QueryBlockTag = None,
+    block_hash: models.query.BlockHashDuctTape = None,
+    block_number: models.query.BlockNumberDuctTape = None,
+    block_tag: models.query.BlockTagDuctTape = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
-
-    # return rpc.rpc_starknet_simulateTransactions(url, body, block_id)
+    return await rpc.rpc_starknet_simulateTransactions(
+        url, body, block_hash, block_number, block_tag
+    )
 
 
 @app.post(
@@ -620,14 +621,15 @@ async def starknet_simulateTransactions(
 )
 async def starknet_traceBlockTransactions(
     node: models.NodeName,
-    block_hash: models.query.BlockHash = None,
-    block_number: models.query.BlockNumber = None,
-    block_tag: models.query.QueryBlockTag = None,
+    block_hash: models.query.BlockHashDuctTape = None,
+    block_number: models.query.BlockNumberDuctTape = None,
+    block_tag: models.query.BlockTagDuctTape = "latest",
 ) -> models.ResponseModelJSON:
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
-
-    # return await rpc.rpc_starknet_traceBlockTransactions(url, block_id)
+    return await rpc.rpc_starknet_traceBlockTransactions(
+        url, block_hash, block_number, block_tag
+    )
 
 
 @app.post(
@@ -637,57 +639,11 @@ async def starknet_traceBlockTransactions(
 )
 async def starknet_traceTransaction(
     node: models.NodeName,
-    transaction_hash: models.query.TxHash,
-) -> models.ResponseModelJSON:
+    tx_hash: models.query.TxHash,
+):
     container = stats.container_get(node)
     url = rpc.rpc_url(node, container)
-    return rpc.rpc_starknet_traceTransaction(url, transaction_hash)
-
-
-# =========================================================================== #
-#                                  WRITE API                                  #
-# =========================================================================== #
-
-
-@app.post(
-    "/info/rpc/starknet_addDeclareTransaction/{node}/",
-    responses={**ERROR_CODES},
-    tags=[TAG_WRITE],
-)
-async def starknet_addDeclareTransaction(
-    node: models.NodeName, declare_transaction: models.body.TxDeclare
-) -> models.ResponseModelJSON:
-    container = stats.container_get(node)
-    url = rpc.rpc_url(node, container)
-    return rpc.rpc_starknet_addDeclareTransaction(url, declare_transaction)
-
-
-@app.post(
-    "/info/rpc/starknet_addDeployAccountTransaction/{node}/",
-    responses={**ERROR_CODES},
-    tags=[TAG_WRITE],
-)
-async def starknet_addDeployAccountTransaction(
-    node: models.NodeName, deploy_account_transaction: models.body.TxDeploy
-) -> models.ResponseModelJSON:
-    container = stats.container_get(node)
-    url = rpc.rpc_url(node, container)
-    return rpc.rpc_starknet_addDeployAccountTransaction(
-        url, deploy_account_transaction
-    )
-
-
-@app.post(
-    "/info/rpc/starknet_addInvokeTransaction/{node}/",
-    responses={**ERROR_CODES},
-    tags=[TAG_WRITE],
-)
-async def starknet_addInvokeTransaction(
-    node: models.NodeName, invoke_transaction: models.body.TxInvoke
-) -> models.ResponseModelJSON:
-    container = stats.container_get(node)
-    url = rpc.rpc_url(node, container)
-    return rpc.rpc_starknetAddInvokeTransaction(url, invoke_transaction)
+    return await rpc.rpc_starknet_traceTransaction(url, tx_hash)
 
 
 # =========================================================================== #
