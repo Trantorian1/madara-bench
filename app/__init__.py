@@ -162,7 +162,7 @@ async def benchmark_rpc(
     rpc_call: rpc.RpcCall,
     samples: models.query.TestSamples = 10,
     interval: models.query.TestInterval = 100,
-) -> list[models.ResponseModelBench]:
+) -> models.ResponseModelBench:
     # containers = [(node, stats.container_get(node)) for node in models.NodeName]
     # urls = [rpc.rpc_url(node, container) for (node, container) in containers]
 

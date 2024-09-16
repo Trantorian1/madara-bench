@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-from typing import Annotated, Generic, TypeVar
+from typing import Annotated, Any, Generic, TypeVar
 
 import pydantic
 
@@ -43,7 +43,7 @@ class ResponseModelStats(pydantic.BaseModel, Generic[T]):
     value: Annotated[T, pydantic.Field(description="System measurement result")]
 
 
-class ResponseModelBench(pydantic.BaseModel):
+class NodeResponseBench(pydantic.BaseModel):
     """Holds benchmarking indetifying data and average response time. This is
     used to store the results of several tests, averaged over multiple samples
 
@@ -65,6 +65,23 @@ class ResponseModelBench(pydantic.BaseModel):
         pydantic.Field(
             description=(
                 "Average method latency over all samples, in nanoseconds"
+            )
+        ),
+    ]
+
+
+class ResponseModelBench(pydantic.BaseModel):
+    """Holds benchmarking results and the inputs used in the benchmarks"""
+
+    nodes: Annotated[
+        list[NodeResponseBench],
+        pydantic.Field(description="Benchmarking results for each node"),
+    ]
+    inputs: Annotated[
+        list[dict[str, Any]],
+        pydantic.Field(
+            description=(
+                "Procedurally generated inputs used as part of the benchmark"
             )
         ),
     ]
