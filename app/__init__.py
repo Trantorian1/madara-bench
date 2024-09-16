@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 import docker
@@ -28,7 +27,7 @@ from starknet_py.net.client_models import (
     TransactionStatusResponse,
 )
 
-from app import benchmarks, error, models, rpc, stats
+from app import benchmarks, error, logging, models, rpc, stats
 
 MADARA: str = "madara_runner"
 MADARA_DB: str = "madara_runner_db"
@@ -70,8 +69,7 @@ TAG_WRITE: str = "write"
 TAG_BENCH: str = "bench"
 TAG_DEBUG: str = "debug"
 
-
-logger = logging.getLogger(__name__)
+logger = logging.get_logger()
 app = fastapi.FastAPI()
 
 
@@ -101,9 +99,9 @@ async def exception_handler_requests_json_decode_error(
 
 @app.exception_handler(ClientError)
 async def exception_handler_starknet_py_client_error(
-    _request: fastapi.Request, _err: ClientError
+    _: fastapi.Request, err: ClientError
 ):
-    raise error.ErrorCodePlumbing
+    raise error.ErrorCodePlumbing(err)
 
 
 # =========================================================================== #
