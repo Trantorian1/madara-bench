@@ -12,20 +12,18 @@
 #                     |____/ \__,_|_|_|\__,_|\___|_|
 #
 # ---
-# Builder which generates the Madara Node docker image for use in benchmarking. 
+# Builder which generates the Madara Node docker image for use in benchmarking.
 # Run with `nix-build`. This will generate an installation script as
-# `./result/bin/copyto` which can then be executed to bring the generate docker 
+# `./result/bin/copyto` which can then be executed to bring the generate docker
 # image `.tar.gz` into the current directory. This can then be loaded into
 # docker using `docker load -i image.tar.gz`.
 # ---
-
 with import <nixpkgs>
 {
   overlays = [
     (import (fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"))
   ];
-};
-let
+}; let
   rustPlatform = makeRustPlatform {
     cargo = rust-bin.nightly."2024-05-31".minimal;
     rustc = rust-bin.nightly."2024-05-31".minimal;
@@ -93,7 +91,7 @@ let
     sha256 = "sha256-GziEDo51Cl8XtD4o3OXb4Qn21R3eHTgCnPvY4GwXpV8=";
   };
 
-  toTOML = pkgs.formats.toml { };
+  toTOML = pkgs.formats.toml {};
 
   # The version of Madara being used
   # Updating this might also cause other nix hashes to need to be re-specified.
@@ -134,12 +132,12 @@ let
     ];
 
     # This will currently fail due to how scarb is used in the codebase,
-    # resulting in an impure build which requires network access to download 
-    # dependencies during the build step. It seems the only way to fix this 
+    # resulting in an impure build which requires network access to download
+    # dependencies during the build step. It seems the only way to fix this
     # would be to make upstream changes to scarb to allow pre-feching
     # dependencies and making them available to scarb
     #
-    # Current workaround is to rely on a simpler but less reproducible and 
+    # Current workaround is to rely on a simpler but less reproducible and
     # performant Dockerfile
     buildType = "production";
 
@@ -161,13 +159,13 @@ let
   # };
 
   # Creates a derivation of busybox with only `cat` and `du` accessible. This
-  # avoids bloating our docker image with unnecessary dependencies. We use 
+  # avoids bloating our docker image with unnecessary dependencies. We use
   # busybox to shave of even more space with tiny implementation of these.
   # `cat` is used to retrieve mounted secrets
   # `du` is used to measure the size of the db
   util = stdenv.mkDerivation {
     name = "minimal-cat";
-    buildInputs = [ busybox ];
+    buildInputs = [busybox];
     buildCommand = ''
       mkdir -p $out/bin
       cp ${busybox}/bin/cat $out/bin/
@@ -196,7 +194,7 @@ let
     name = "madara";
     tag = "latest";
 
-    # # Use `fromImage` to specify a base image. This image must already be 
+    # # Use `fromImage` to specify a base image. This image must already be
     # # available locally, such as after using `dockerTools.pullImage`
     # fromImage = debian;
 
@@ -210,29 +208,29 @@ let
         # https://discourse.nixos.org/t/adding-a-new-ca-certificate-to-included-bundle/14301/8
         cacert
       ];
-      pathsToLink = [ "/bin" ];
+      pathsToLink = ["/bin"];
     };
 
     config = {
-      Cmd = [ "/bin/madara-runner" ];
-      Env = [ "SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt" ];
+      Cmd = ["/bin/madara-runner"];
+      Env = ["SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt"];
     };
   };
-
-# Calling `nix-build` on this file will create an artifact in `/nix/store/`.
-# Crucially, nix uses the default unix time as date of last modification. This
-# poses an issue since it means Make will always flag this output as
-# out-of-date.
-#
-# To avoid this, we create a script which copies the generated docker image to 
-# a given directory, updating its date to the current time. We cannot do this 
-# otherwise as only root has ownership of artifacts generated in `/nix/store/`.
-#
-# This way, we are able to guarantee that docker images will not be rebuilt by 
-# Make on each run, along with any other command associated to their generation 
-# such as `docker load -i`.
-in writeScriptBin "copyto" ''
-  #!${pkgs.stdenv.shell}
-  cp ${image} $1
-  touch -m $1
-''
+  # Calling `nix-build` on this file will create an artifact in `/nix/store/`.
+  # Crucially, nix uses the default unix time as date of last modification. This
+  # poses an issue since it means Make will always flag this output as
+  # out-of-date.
+  #
+  # To avoid this, we create a script which copies the generated docker image to
+  # a given directory, updating its date to the current time. We cannot do this
+  # otherwise as only root has ownership of artifacts generated in `/nix/store/`.
+  #
+  # This way, we are able to guarantee that docker images will not be rebuilt by
+  # Make on each run, along with any other command associated to their generation
+  # such as `docker load -i`.
+in
+  writeScriptBin "copyto" ''
+    #!${pkgs.stdenv.shell}
+    cp ${image} $1
+    touch -m $1
+  ''
