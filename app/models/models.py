@@ -1,9 +1,8 @@
 import datetime
 from enum import Enum
-from typing import Annotated, Any, Generic, TypeVar
+from typing import Annotated, Generic, TypeVar
 
 import pydantic
-from pydantic.generics import GenericModel
 
 REGEX_HEX: str = "^0x[a-fA-F0-9]+$"
 REGEX_BASE_64: str = "^0x[a-zA-Z0-9]+$"
@@ -28,7 +27,7 @@ class NodeName(str, Enum):
     MADARA = "madara"
 
 
-class ResponseModelStats(GenericModel, Generic[T]):
+class ResponseModelStats(pydantic.BaseModel, Generic[T]):
     """Holds system measurement (cpu, ram, storage) identifying data. This is
     used to store data resulting from a system measurement for use in
     benchmarking.
@@ -71,7 +70,7 @@ class ResponseModelBench(pydantic.BaseModel):
     ]
 
 
-class ResponseModelJSON(pydantic.BaseModel):
+class ResponseModelJSON(pydantic.BaseModel, Generic[T]):
     """Holds JSON RPC call identifying data and execution time. This is used to
     store data resulting from a JSON RPC call for use in benchmarking
     """
@@ -87,4 +86,4 @@ class ResponseModelJSON(pydantic.BaseModel):
     elapsed: Annotated[
         int, pydantic.Field(description="Call response delay, in nanoseconds")
     ]
-    output: Annotated[Any, pydantic.Field(description="JSON RPC node response")]
+    output: Annotated[T, pydantic.Field(description="JSON RPC node response")]

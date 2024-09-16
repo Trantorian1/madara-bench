@@ -38,7 +38,7 @@ BlockTag = Annotated[
 ]
 
 ContractAddress = Annotated[
-    str,
+    Hash,
     fastapi.Query(
         pattern=REGEX_HEX,
         description="Address of a contract on-chain",
