@@ -1,11 +1,12 @@
 import datetime
 import time
+import typing
 from enum import Enum
 from typing import Any, Coroutine
 
 import requests
 from docker.models.containers import Container
-from starknet_py.net.client_models import Hash, Tag
+from starknet_py.net.client_models import Tag
 from starknet_py.net.full_node_client import FullNodeClient
 from starknet_py.net.models.transaction import AccountTransaction
 
@@ -99,19 +100,14 @@ async def json_rpc_duct_tape(
     )
 
 
-def to_block_id(
-    block_hash: str | None = None,
-    block_number: int | None = None,
-    block_tag: models.BlockTag | None = None,
-) -> str | dict[str, str] | dict[str, int]:
-    if isinstance(block_hash, str):
-        return {"block_hash": block_hash}
-    elif isinstance(block_number, int):
-        return {"block_number": block_number}
-    elif isinstance(block_tag, models.BlockTag):
-        return block_tag.name
+def to_block_number(
+    block_number: models.query.BlockNumberDuctTape = None,
+    block_tag: models.query.BlockTagDuctTape = None,
+) -> Tag | int | None:
+    if block_number is None:
+        return block_tag
     else:
-        raise error.ErrorBlockIdMissing()
+        return block_number
 
 
 def rpc_url(node: models.NodeName, container: Container):
@@ -130,221 +126,326 @@ def rpc_url(node: models.NodeName, container: Container):
 # =========================================================================== #
 
 
-def rpc_starknet_blockHashAndNumber(url: str) -> models.ResponseModelJSON:
-    return json_rpc(url, RpcCall.STARKNET_BLOCK_HASH_AND_NUMBER)
-
-
-def rpc_starknet_blockNumber(url: str) -> models.ResponseModelJSON:
-    return json_rpc(url, RpcCall.STARKNET_BLOCK_NUMBER)
-
-
-def rpc_starknet_call(
-    url: str,
-    request: models.body.Call,
-    block_id: str | dict[str, str] | dict[str, int],
-) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_CALL,
-        {"request": vars(request), "block_id": block_id},
+async def rpc_starknet_blockHashAndNumber(url: str) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    block_hash_and_number = client.get_block_hash_and_number()
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_BLOCK_HASH_AND_NUMBER, block_hash_and_number
     )
 
 
-def rpc_starknet_chainId(url: str) -> models.ResponseModelJSON:
-    return json_rpc(url, RpcCall.STARKNET_CHAIN_ID)
+async def rpc_starknet_blockNumber(url: str) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    block_number = client.get_block_number()
+    return await json_rpc_duct_tape(RpcCall.STARKNET_BLOCK_NUMBER, block_number)
+
+
+async def rpc_starknet_call(
+    url: str,
+    call: models.body.Call,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
+) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    call = client.call_contract(
+        call, block_hash, to_block_number(block_number, block_tag)
+    )
+    return await json_rpc_duct_tape(RpcCall.STARKNET_CALL, call)
+
+
+async def rpc_starknet_chainId(url: str) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    chain_id = client.get_chain_id()
+    return await json_rpc_duct_tape(RpcCall.STARKNET_CHAIN_ID, chain_id)
 
 
 async def rpc_starknet_estimateFee(
     url: str,
-    tx: AccountTransaction | list[AccountTransaction],
-    block_hash: Hash | None = None,
-    block_number: Tag | int | None = None,
+    tx: models.body.TxDuctTape | list[models.body.TxDuctTape],
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
     client = FullNodeClient(node_url=url)
     estimate_fee = client.estimate_fee(
-        tx=tx, block_hash=block_hash, block_number=block_number
+        typing.cast(AccountTransaction, tx),
+        # TODO: make this an option
+        True,
+        block_hash,
+        to_block_number(block_number, block_tag),
     )
 
     return await json_rpc_duct_tape(RpcCall.STARKNET_ESTIMATE_FEE, estimate_fee)
 
 
-def rpc_starknet_estimateMessageFee(
+async def rpc_starknet_estimateMessageFee(
     url: str,
     body: models.body.EstimateMessageFee,
-    block_id: str | dict[str, str] | dict[str, int],
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_ESTIMATE_MESSAGE_FEE,
-        {
-            "from_address": body.from_address,
-            "to_address": body.to_address,
-            "entry_point_selector": body.entry_point_selector,
-            "payload": body.payload,
-            "block_id": block_id,
-        },
+    client = FullNodeClient(node_url=url)
+    estimage_message_fee = client.estimate_message_fee(
+        body.from_address,
+        body.to_address,
+        body.entry_point_selector,
+        body.payload,
+        block_hash,
+        to_block_number(block_number, block_tag),
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_ESTIMATE_MESSAGE_FEE, estimage_message_fee
     )
 
 
-def rpc_starknet_getBlockTransactionCount(
-    url: str, block_id: str | dict[str, str] | dict[str, int]
+async def rpc_starknet_getBlockTransactionCount(
+    url: str,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_BLOCK_TRANSACTION_COUNT,
-        {"block_id": block_id},
+    client = FullNodeClient(node_url=url)
+    get_block_tx_count = client.get_block_transaction_count(
+        block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_BLOCK_TRANSACTION_COUNT, get_block_tx_count
     )
 
 
 async def rpc_starknet_getBlockWithReceipts(
-    url: str, block_id: str | dict[str, str] | dict[str, int]
+    url: str,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url, RpcCall.STARKNET_GET_BLOCK_WITH_RECEIPTS, {"block_id": block_id}
+    client = FullNodeClient(node_url=url)
+    block_with_receipts = client.get_block_with_receipts(
+        block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_BLOCK_WITH_RECEIPTS, block_with_receipts
     )
 
 
-def rpc_starknet_getBlockWithTxHashes(
-    url: str, block_id: str | dict[str, str] | dict[str, int]
+async def rpc_starknet_getBlockWithTxHashes(
+    url: str,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url, RpcCall.STARKNET_GET_BLOCK_WITH_TX_HASHES, {"block_id": block_id}
+    client = FullNodeClient(node_url=url)
+    block_with_tx_hashes = client.get_block_with_tx_hashes(
+        block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_BLOCK_WITH_TX_HASHES, block_with_tx_hashes
     )
 
 
 async def rpc_starknet_getBlockWithTxs(
-    url: str, block_id: str | dict[str, str] | dict[str, int]
-) -> models.ResponseModelJSON:
-    return json_rpc(
-        url, RpcCall.STARKNET_GET_BLOCK_WITH_TXS, {"block_id": block_id}
-    )
-
-
-def rpc_starnet_getClass(
-    url: str, class_hash: str, block_id: str | dict[str, str] | dict[str, int]
-) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_CLASS,
-        {"block_id": block_id, "class_hash": class_hash},
-    )
-
-
-def rpc_starknet_getClassAt(
     url: str,
-    contract_address: str,
-    block_id: str | dict[str, str] | dict[str, int],
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_CLASS_AT,
-        {"block_id": block_id, "contract_address": contract_address},
+    client = FullNodeClient(node_url=url)
+    block_with_txs = client.get_block_with_txs(
+        block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_BLOCK_WITH_TXS, block_with_txs
     )
 
 
-def rpc_starknet_getClassHashAt(
+async def rpc_starnet_getClass(
     url: str,
-    contract_address: str,
-    block_id: str | dict[str, str] | dict[str, int],
+    class_hash: models.query.ClassHash,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_CLASS_HASH_AT,
-        {"block_id": block_id, "contract_address": contract_address},
+    client = FullNodeClient(node_url=url)
+    class_by_hash = client.get_class_by_hash(
+        class_hash, block_hash, to_block_number(block_number, block_tag)
     )
 
-
-def rcp_starknet_getEvents(
-    url: str, body: models.body.GetEvents
-) -> models.ResponseModelJSON:
-    return json_rpc(url, RpcCall.STARKNET_GET_EVENTS, {"filter": body})
+    return await json_rpc_duct_tape(RpcCall.STARKNET_GET_CLASS, class_by_hash)
 
 
-def rpc_starknet_getNonce(
+async def rpc_starknet_getClassAt(
     url: str,
     contract_address: models.query.ContractAddress,
-    block_id: str | dict[str, str] | dict[str, int],
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_NONCE,
-        {"block_id": block_id, "contract_address": contract_address},
+    client = FullNodeClient(node_url=url)
+    class_at = client.get_class_at(
+        contract_address, block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(RpcCall.STARKNET_GET_CLASS_AT, class_at)
+
+
+async def rpc_starknet_getClassHashAt(
+    url: str,
+    contract_address: models.query.ContractAddress,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
+) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    class_hash = client.get_class_hash_at(
+        contract_address, block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_CLASS_HASH_AT, class_hash
     )
 
 
-def rpc_starknet_getStateUpdate(
-    url: str, block_id: str | dict[str, str] | dict[str, int]
+async def rcp_starknet_getEvents(
+    url: str, body: models.body.GetEvents
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url, RpcCall.STARKNET_GET_STATE_UPDATE, {"block_id": block_id}
+    client = FullNodeClient(node_url=url)
+    get_events = client.get_events(
+        address=body.address,
+        keys=body.keys,
+        from_block_number=body.from_block_number,
+        from_block_hash=body.from_block_hash,
+        to_block_number=body.to_block_number,
+        to_block_hash=body.to_block_hash,
+        follow_continuation_token=body.continuation_token is None,
+        continuation_token=body.continuation_token,
+        chunk_size=body.chunk_size,
+    )
+
+    return await json_rpc_duct_tape(RpcCall.STARKNET_GET_EVENTS, get_events)
+
+
+async def rpc_starknet_getNonce(
+    url: str,
+    contract_address: models.query.ContractAddress,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
+) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    nonce = client.get_contract_nonce(
+        contract_address, block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(RpcCall.STARKNET_GET_NONCE, nonce)
+
+
+async def rpc_starknet_getStateUpdate(
+    url: str,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
+) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    state_update = client.get_state_update(
+        block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_STATE_UPDATE, state_update
     )
 
 
 async def rpc_starknet_getStorageAt(
     url: str,
-    contract_address: str,
-    contract_key: str,
-    block_id: str | dict[str, str] | dict[str, int],
+    contract_address: models.query.ContractAddress,
+    key: models.query.ContractKey,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_STORAGE_AT,
-        {
-            "contract_address": contract_address,
-            "key": contract_key,
-            "block_id": block_id,
-        },
+    if isinstance(key, str):
+        key = int(key, 0)
+
+    client = FullNodeClient(node_url=url)
+    storage = client.get_storage_at(
+        contract_address,
+        key,
+        block_hash,
+        to_block_number(block_number, block_tag),
     )
 
+    return await json_rpc_duct_tape(RpcCall.STARKNET_GET_STORAGE_AT, storage)
 
-def rpc_starknet_getTransactionByBlockIdAndIndex(
+
+async def rpc_starknet_getTransactionByBlockIdAndIndex(
     url: str,
-    transaction_index: int,
-    block_id: str | dict[str, str] | dict[str, int],
+    index: int,
+    block_hash: models.query.BlockHashDuctTape,
+    block_number: models.query.BlockNumberDuctTape,
+    block_tag: models.query.BlockTagDuctTape,
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX,
-        {"block_id": block_id, "index": transaction_index},
+    client = FullNodeClient(node_url=url)
+    tx = client.get_transaction_by_block_id(
+        index, block_hash, to_block_number(block_number, block_tag)
+    )
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_TRANSACTION_BY_BLOCK_ID_AND_INDEX, tx
     )
 
 
-def rpc_starknet_getTransactionByHash(
-    url: str, transaction_hash: str
+async def rpc_starknet_getTransactionByHash(
+    url: str, tx_hash: models.query.TxHash
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_TRANSACTION_BY_HASH,
-        {"transaction_hash": transaction_hash},
+    client = FullNodeClient(node_url=url)
+    tx = client.get_transaction(tx_hash)
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_TRANSACTION_BY_HASH, tx
     )
 
 
-def rpc_starknet_getTransactionReceipt(
-    url: str, transaction_hash: str
+async def rpc_starknet_getTransactionReceipt(
+    url: str, tx_hash: models.query.TxHash
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_TRANSACTION_RECEIPT,
-        {"transaction_hash": transaction_hash},
+    client = FullNodeClient(node_url=url)
+    tx_receipt = client.get_transaction_receipt(tx_hash)
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_TRANSACTION_RECEIPT, tx_receipt
     )
 
 
-def rpc_starknet_getTransactionStatus(
-    url: str, transaction_hash: str
+async def rpc_starknet_getTransactionStatus(
+    url: str, tx_hash: models.query.TxHash
 ) -> models.ResponseModelJSON:
-    return json_rpc(
-        url,
-        RpcCall.STARKNET_GET_TRANSACTION_STATUS,
-        {"transaction_hash": transaction_hash},
+    client = FullNodeClient(node_url=url)
+    tx_status = client.get_transaction_status(tx_hash)
+
+    return await json_rpc_duct_tape(
+        RpcCall.STARKNET_GET_TRANSACTION_STATUS, tx_status
     )
 
 
-def rpc_starknet_specVersion(url: str) -> models.ResponseModelJSON:
-    return json_rpc(url, RpcCall.STARKNET_SPEC_VERSION)
+async def rpc_starknet_specVersion(url: str) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    spec_version = client.spec_version()
+
+    return await json_rpc_duct_tape(RpcCall.STARKNET_SPEC_VERSION, spec_version)
 
 
-def rpc_starknet_syncing(url: str) -> models.ResponseModelJSON:
-    return json_rpc(url, RpcCall.STARKNET_SYNCING)
+async def rpc_starknet_syncing(url: str) -> models.ResponseModelJSON:
+    client = FullNodeClient(node_url=url)
+    syncing = client.get_syncing_status()
+
+    return await json_rpc_duct_tape(RpcCall.STARKNET_SYNCING, syncing)
 
 
 # =========================================================================== #

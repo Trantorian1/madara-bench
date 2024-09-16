@@ -1,8 +1,18 @@
 from typing import Any
 
 import fastapi
+from starknet_py.net.client_models import Call, Hash
+from starknet_py.net.models.transaction import (
+    DeclareV1,
+    DeclareV2,
+    DeclareV3,
+    DeployAccountV1,
+    DeployAccountV3,
+    InvokeV1,
+    InvokeV3,
+)
 
-from app.models.query import BlockId
+from app.models.query import BlockHashDuctTape, BlockNumberDuctTape
 
 from .models import *
 
@@ -43,28 +53,27 @@ TxInvoke = Annotated[
     TxInvokeV0 | TxInvokeV1 | TxInvokeV3,
     fastapi.Body(examples=[ex_tx_invoke()]),
 ]
-
+TxInvokeDuctTape = Annotated[InvokeV1 | InvokeV3, fastapi.Body()]
 
 TxDeclare = Annotated[
     TxDeclareV1 | TxDeclareV2 | TxDeclareV3,
     fastapi.Body(examples=[ex_tx_declare()]),
 ]
+TxDeclareDuctTape = Annotated[DeclareV1 | DeclareV2 | DeclareV3, fastapi.Body()]
 
-TxDeploy = TxDeployV1 | TxDeclareV3
+TxDeploy = Annotated[TxDeployV1 | TxDeclareV3, fastapi.Body()]
+TxDeployDuctTape = Annotated[DeployAccountV1 | DeployAccountV3, fastapi.Body()]
 
 Tx = Annotated[
     TxInvoke | TxDeclare | TxDeploy,
     fastapi.Body(examples=[ex_tx_invoke()]),
 ]
+TxDuctTape = Annotated[
+    TxInvokeDuctTape | TxDeclareDuctTape | TxDeployDuctTape, fastapi.Body()
+]
 
 
-class _BodyCall(pydantic.BaseModel):
-    contract_address: FieldHex
-    entry_point_selector: FieldHex
-    calldata: list[FieldHex] = []
-
-
-Call = Annotated[_BodyCall, fastapi.Body(include_in_schema=False)]
+Call = Annotated[Call, fastapi.Body(include_in_schema=False)]
 
 
 class _BodyEstimateFee(pydantic.BaseModel):
@@ -100,14 +109,14 @@ class _BodyEstimateMessageFee(pydantic.BaseModel):
         ),
     ]
     to_address: Annotated[
-        FieldHex,
+        Hash,
         pydantic.Field(
             title="Starknet address",
             description="The target L2 address the message is sent to",
         ),
     ]
     entry_point_selector: Annotated[
-        FieldHex,
+        Hash,
         pydantic.Field(
             description=(
                 "Entry point in the L1 contract used to send the message"
@@ -115,7 +124,7 @@ class _BodyEstimateMessageFee(pydantic.BaseModel):
         ),
     ]
     payload: Annotated[
-        list[FieldHex],
+        list[Hash],
         pydantic.Field(
             description=(
                 "The message payload being sent to an address on Starknet"
@@ -130,24 +139,14 @@ EstimateMessageFee = Annotated[
 
 
 class _BodyGetEvents(pydantic.BaseModel):
-    from_block: Annotated[
-        BlockId,
-        pydantic.Field(description="Filter events from this block (inclusive)"),
-    ]
-    to_block: Annotated[
-        BlockId,
-        pydantic.Field(
-            description="Filter events up to this block (exclusive)"
-        ),
-    ]
     address: Annotated[
-        FieldHex,
+        Hash,
         pydantic.Field(
             description="On-chain address of the contract emitting the events"
         ),
     ]
     keys: Annotated[
-        list[FieldHex],
+        list[list[Hash]],
         pydantic.Field(
             description=(
                 "Value used to filter events. Each key designate the possible "
@@ -156,8 +155,28 @@ class _BodyGetEvents(pydantic.BaseModel):
             )
         ),
     ]
+    from_block_number: Annotated[
+        BlockNumberDuctTape | None,
+        pydantic.Field(description="Filter events from this block (inclusive)"),
+    ] = None
+    from_block_hash: Annotated[
+        BlockHashDuctTape | None,
+        pydantic.Field(description="Filter events from this block (inclusive)"),
+    ] = None
+    to_block_number: Annotated[
+        BlockNumberDuctTape | None,
+        pydantic.Field(
+            description="Filter events up to this block (exclusive)"
+        ),
+    ] = None
+    to_block_hash: Annotated[
+        BlockHashDuctTape | None,
+        pydantic.Field(
+            description="Filter events up to this block (exclusive)"
+        ),
+    ] = None
     continuation_token: Annotated[
-        str,
+        str | None,
         pydantic.Field(
             description=(
                 "The token returned from the previous query. If no token is "
@@ -166,11 +185,11 @@ class _BodyGetEvents(pydantic.BaseModel):
                 "events at the end of that chunk in the next query"
             )
         ),
-    ]
+    ] = None
     chunk_size: Annotated[
         int,
         pydantic.Field(ge=0, description="Maximum number of events to return"),
-    ]
+    ] = 1
 
 
 GetEvents = Annotated[_BodyGetEvents, fastapi.Body(include_in_schema=False)]
